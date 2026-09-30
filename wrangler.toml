@@ -1,0 +1,18 @@
+# Cloudflare Pages config for GustavAndSaarSite. The site is static (repo
+# root) and functions/ holds the Pages Functions: /api/contact (form → email)
+# and /api/visit (visit-notification beacon → email).
+name = "gustavandsaar"
+pages_build_output_dir = "."
+compatibility_date = "2026-09-10"
+
+# Backs functions/api/visit.js — one key per IP ("visit:<ip>") with a 60s
+# TTL so a single visit only sends one email. Create it with
+# `npx wrangler kv namespace create VISITS_KV` and paste the id below.
+[[kv_namespaces]]
+binding = "VISITS_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Secrets / variables (Pages > Settings, or `wrangler pages secret put`):
+#   RESEND_API_KEY  - Resend API key
+#   CONTACT_TO      - Saar's email; receives BOTH contact-form and visit emails
+#   CONTACT_FROM    - sender on a domain verified in Resend
