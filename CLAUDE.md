@@ -23,7 +23,7 @@ Until those exist `/api/contact` returns 500 and `/api/visit` silently skips sen
 
 ## Architecture
 
-Layout: root holds the pages (`index.html`, `privacy.html`, `accessibility.html`) and Cloudflare files (`_headers`, `robots.txt`, `sitemap.xml`, `wrangler.toml`); `css/`, `js/`, `assets/images/` (logos), `assets/icons/` (favicons), `services/` (landing pages), `functions/` (API), `docs/` (notes and prototypes).
+Layout: root holds the pages (`index.html`, `privacy.html`, `accessibility.html`) and Cloudflare files (`_headers`, `robots.txt`, `sitemap.xml`, `wrangler.toml`); `css/`, `js/`, `assets/images/` (logos, `og-image.png`), `assets/icons/` (favicons), `services/` and `panels/` (generated landing pages), `404.html`, `functions/` (API), `docs/` (notes and prototypes).
 
 - `index.html`: single page; sections are anchored (`#about`, `#services`, `#process`, `#projects`, `#contact`).
 - `css/styles.css`: all styling. Brand colors come from the logo (green `--g` #8ABD36 / `--g2` #9BE33A on charcoal `--ink`); text on green uses the dark ink color for contrast. Breakpoints: 1000px (tablet), 720px (mobile).
@@ -55,3 +55,13 @@ The goal is to rank the site in Google (Hebrew, Israel market) for electrical-pa
 Copy in square brackets (`[X]+`, `[שם הפרויקט]`, phone, email, address, the about-story) and the striped `.ph` blocks are placeholders awaiting real content and photos. Service descriptions and process steps are draft copy to be confirmed with the owners. The `tel:`/`mailto:` hrefs in the contact section are dummies.
 
 The visual design was prototyped as a Claude Design artifact (desktop + mobile boards); the code here is the implementation.
+
+## SEO status and open items (as of 2026-10-01)
+
+Technical/on-page SEO is done; ranking now depends on real content and off-site presence. Open items, in priority order:
+1. Real NAP: replace the `[כתובת אימייל]`/`[כתובת הסדנה]` placeholders and the dummy `info@example.com` (index contact + footer), then restore `email`/`address` in the `ElectricalContractor` JSON-LD in `index.html` (removed because placeholders are invalid there).
+2. Real projects (photos with `alt`, type/amp/location) in `#projects`; extend landing-page copy in `docs/build-landing-pages.py` with real project/standards content once the owners confirm it (keep copy free of unconfirmed claims).
+3. Google Business Profile, Search Console (submit `sitemap.xml`), customer reviews, backlinks.
+4. Keyword research (volumes are unverified); record it in `docs/`.
+5. Email setup (Resend + KV, see above) so form leads actually arrive.
+Landing pages are never hand-edited: change `PAGES` in `docs/build-landing-pages.py` and rerun it (it rewrites `sitemap.xml` too); bump `CSS_V` there and the `?v=` in `index.html`/`404.html` when `css/styles.css` changes.
