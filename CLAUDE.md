@@ -24,11 +24,11 @@ Until those exist `/api/contact` returns 500 and `/api/visit` silently skips sen
 ## Architecture
 
 - `index.html`: single page; sections are anchored (`#about`, `#services`, `#process`, `#projects`, `#contact`).
-- `styles.css`: all styling. Brand colors come from the logo (green `--g` #7AB929 / `--g2` #9BE33A on charcoal `--ink`); text on green uses the dark ink color for contrast. Breakpoints: 1000px (tablet), 720px (mobile).
+- `styles.css`: all styling. Brand colors come from the logo (green `--g` #8ABD36 / `--g2` #9BE33A on charcoal `--ink`); text on green uses the dark ink color for contrast. Breakpoints: 1000px (tablet), 720px (mobile).
 - `script.js`: mobile menu toggle, project filters, accessibility toolbar and contact-form validation/submit via `fetch` to `/api/contact`.
 - `functions/api/contact.js`: Cloudflare Pages Function that emails form submissions (incl. project type) to Saar through Resend. Needs env vars `RESEND_API_KEY`, `CONTACT_TO`, `CONTACT_FROM` set in the Pages project; it returns 500 until they exist.
 - `functions/api/visit.js` + `functions/_lib/email.js`: visit notifications, ported from the AlonSite project. A 1×1 beacon `<img src="/api/visit?page=...">` at the top of every page's `<body>` emails Saar (`CONTACT_TO`) once per visit; dedup by cookie (`gs_visited`) + IP in Workers KV (`VISITS_KV`, 60s TTL, declared in `wrangler.toml` — replace the placeholder id). The email includes Cloudflare edge geo/ISP/device data (IP-based, approximate). `_lib/email.js` also builds the contact-form email. New pages must include the beacon with their own `page=` name.
-- `assets/logo.png`: the company's original logo. Do NOT redraw or alter it; the owner wants this exact artwork. It is raster with a white background, so it is shown on a white rounded plate (`.brand`) and also used as the favicon.
+- `assets/logo.png`: the company's original logo. Do NOT redraw or alter it; the owner wants this exact artwork. It is raster with a white background, so it is shown on a white rounded plate (`.brand`) (the favicon is a separate simplified emblem mark, `assets/favicon.svg` + PNG fallbacks).
 - `privacy.html`, `accessibility.html`: legal page templates with `[placeholders]`; they need legal review before launch.
 - `docs/competitor-analysis.md`: analysis of the competitor adpsystem.co.il (structure, strengths/weaknesses, what we add). Consult and update it when planning content/sections.
 - Accessibility toolbar (`#a11y` in `index.html`, logic in `script.js`) toggles `a11y-*` classes on `<html>`; its state is stored in localStorage.

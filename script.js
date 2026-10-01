@@ -1,5 +1,13 @@
 (function () {
   function rest() { return 'var(--rest)'; }
+  // Keep anchor scroll offset equal to the sticky nav height
+  var navEl = document.querySelector('.nav');
+  function setNavH() {
+    if (navEl) document.documentElement.style.setProperty('--nav-h', navEl.offsetHeight + 'px');
+  }
+  setNavH();
+  window.addEventListener('resize', setNavH);
+  window.addEventListener('load', setNavH);
   // Mobile menu
   var burger = document.getElementById('burger');
   var menu = document.getElementById('menu');
@@ -143,14 +151,26 @@
       var d = Math.abs(rect.top + rect.height / 2 - vh / 2) / vh;
       var target = smooth((d - 0.06) / 0.4);
       cur += (target - cur) * 0.12;
+      if (calm()) { cur = 0; paint(0); raf = 0; return; }
       paint(cur);
       raf = Math.abs(target - cur) > 0.002 ? requestAnimationFrame(tick) : 0;
     };
-    var kick = function () { if (!raf && !still) raf = requestAnimationFrame(tick); };
+    var calm = function () { return still || document.documentElement.classList.contains('a11y-motion'); };
+    var kick = function () { if (!raf && !calm()) raf = requestAnimationFrame(tick); };
     paint(cur);
     window.addEventListener('scroll', kick, { passive: true });
     window.addEventListener('resize', kick);
     kick();
+    document.addEventListener('a11y-motion', function () { if (calm()) { cur = 0; paint(0); } else kick(); });
+  }
+
+  function applyMotion() {
+    var off = document.documentElement.classList.contains('a11y-motion');
+    if (!document.getAnimations) return;
+    document.getAnimations().forEach(function (a) {
+      if ((window.CSSAnimation && a instanceof CSSAnimation) || (window.CSSTransition && a instanceof CSSTransition)) return;
+      if (off) a.pause(); else if (a.playState === 'paused') a.play();
+    });
   }
 
   // Hero graphic: side buses (like the background traces) that plug into the central chip
@@ -223,7 +243,7 @@
     var ksw = document.getElementById('themeBtn');
     if (ksw) {
       // scatter one spark gap on each output trace, at hand-picked arbitrary spots along it
-      var gStart = [62, 12, -62], gFrac = [.62, .22, .18], gKs = [1, .86, 1.05], gXs = [];
+      var gStart = [62, 12, -62], gFrac = [.2, .8, .46], gKs = [1, .86, 1.05], gXs = [];
       var gB = (T[0].x - 50) < 260 ? .8 : 1;
       [0, 1, 2].forEach(function (i) {
         var lo = gStart[i] + 56 * gB + 8, hi = T[i].x - 52 * gB, gx = lo + Math.max(0, hi - lo) * gFrac[i], k = gKs[i] * gB;
@@ -260,7 +280,7 @@
       if (i === 1) midCoreAt = coreAt;
       flash(chips[i], [{ fill: '#6FA82B', stroke: '#A6E44A', offset: 0 }, { fill: 'var(--chip)', stroke: '#7AB929', offset: pulse }, { fill: 'var(--chip)', stroke: '#7AB929', offset: 1 }], chipAt, 0);
       flash(coreRect, [{ filter: 'drop-shadow(0 0 14px #7AB929)', offset: 0 }, { filter: 'none', offset: pulse }, { filter: 'none', offset: 1 }], coreAt, 0);
-      flash(bolt, [{ transform: 'translate(0px,335px) scale(1.45)', offset: 0 }, { transform: 'translate(0px,335px) scale(1.1)', offset: pulse }, { transform: 'translate(0px,335px) scale(1.1)', offset: 1 }], coreAt, 0);
+      flash(bolt, [{ transform: 'translate(0px,335px) scale(1.2)', offset: 0 }, { transform: 'translate(0px,335px) scale(0.9)', offset: pulse }, { transform: 'translate(0px,335px) scale(0.9)', offset: 1 }], coreAt, 0);
       flash(halo, [{ opacity: 1, offset: 0 }, { opacity: .4, offset: pulse * 1.5 }, { opacity: .4, offset: 1 }], coreAt, 0);
       flash(pads[st.padEl], [{ fill: '#A6E44A', stroke: '#A6E44A', offset: 0 }, { fill: rest(), stroke: '#5E8F2E', offset: pulse }, { fill: rest(), stroke: '#5E8F2E', offset: 1 }], padAt, 0);
     });
@@ -275,8 +295,9 @@
     });
     };
     build();
+    applyMotion();
     var rt = 0;
-    window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(build, 150); });
+    window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { build(); applyMotion(); }, 150); });
     window.addEventListener('load', build);
   }
 
@@ -413,7 +434,7 @@
   function sync() { aPanel.querySelectorAll('[data-a]').forEach(function (b) { var k = b.dataset.a; if (toggles[k]) b.setAttribute('aria-pressed', String(root.classList.contains(toggles[k]))); }); }
   try {
     var st = JSON.parse(localStorage.getItem('a11y') || 'null');
-    if (st) { size = st.size || 0; (st.on || []).forEach(function (k) { if (toggles[k]) root.classList.add(toggles[k]); }); applySize(); sync(); }
+    if (st) { size = st.size || 0; (st.on || []).forEach(function (k) { if (toggles[k]) root.classList.add(toggles[k]); }); applySize(); sync(); applyMotion(); }
   } catch (e) {}
   aBtn.addEventListener('click', function () {
     var open = aPanel.hidden;
@@ -427,7 +448,7 @@
     else if (k === 'sm') size = Math.max(size - 1, -1);
     else if (k === 'reset') { size = 0; Object.keys(toggles).forEach(function (t) { root.classList.remove(toggles[t]); }); }
     else root.classList.toggle(toggles[k]);
-    applySize(); sync(); save();
+    applySize(); sync(); save(); applyMotion(); document.dispatchEvent(new Event('a11y-motion'));
   });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && !aPanel.hidden) { aPanel.hidden = true; aBtn.setAttribute('aria-expanded', 'false'); aBtn.focus(); }
@@ -480,6 +501,16 @@
   // Contact form
   var form = document.getElementById('contactForm');
   var msg = document.getElementById('formMsg');
+  // energize the wire along the top as the key fields are filled
+  var req = ['f-name', 'f-phone', 'f-type', 'f-msg'].map(function (id) { return document.getElementById(id); });
+  function energize() {
+    var n = req.filter(function (el) { return el.value.trim(); }).length;
+    form.style.setProperty('--p', n / req.length);
+    form.classList.toggle('live', n > 0);
+    form.classList.toggle('full', n === req.length);
+  }
+  form.addEventListener('input', energize);
+  form.addEventListener('change', energize);
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var bad = false;
@@ -502,6 +533,8 @@
       .then(function (r) {
         if (!r.ok) throw new Error();
         form.reset();
+        form.classList.add('sent');
+        setTimeout(function () { form.classList.remove('sent'); energize(); }, 1200);
         msg.textContent = 'תודה! קיבלנו את הפנייה ונחזור אליכם בהקדם.';
       })
       .catch(function () {
@@ -523,4 +556,15 @@
       else if (e.boundingClientRect.top > 0) steps.classList.remove('go');
     });
   }, { threshold: 0.45 }).observe(steps);
+})();
+
+/* contact headline: ignite once visible */
+(function () {
+  var el = document.getElementById('ignite');
+  if (!el) return;
+  if (!('IntersectionObserver' in window)) { el.classList.add('on'); return; }
+  var io = new IntersectionObserver(function (es) {
+    if (es[0].isIntersecting) { el.classList.add('on'); io.disconnect(); }
+  }, { threshold: 0.6 });
+  io.observe(el);
 })();
