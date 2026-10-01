@@ -503,11 +503,11 @@
   var msg = document.getElementById('formMsg');
   // energize the wire along the top as the key fields are filled
   var req = ['f-name', 'f-phone', 'f-type', 'f-msg'].map(function (id) { return document.getElementById(id); });
-  function energize() {
+    function energize() {
     var n = req.filter(function (el) { return el.value.trim(); }).length;
-    form.style.setProperty('--p', n / req.length);
     form.classList.toggle('live', n > 0);
     form.classList.toggle('full', n === req.length);
+    form.style.setProperty('--p', n / req.length);
   }
   form.addEventListener('input', energize);
   form.addEventListener('change', energize);

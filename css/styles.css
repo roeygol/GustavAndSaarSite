@@ -267,7 +267,7 @@ h2.sm{font-size:40px;margin-bottom:56px}
 
 /* ---------- footer ---------- */
 .foot{background:var(--ink3);color:var(--mute-d);padding:64px 0 24px}
-.foot-grid{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(3,minmax(0,1fr));gap:40px;font-size:16px}
+.foot-grid{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(5,minmax(0,1fr));gap:28px;font-size:16px}
 .foot-grid nav,.foot-grid>div:last-child{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .foot-brand{display:flex;flex-direction:column;gap:16px;align-items:flex-start}
 .foot .brand{background:#fff;padding:6px 14px;border-radius:2px}
@@ -301,6 +301,15 @@ html.a11y-motion *{animation:none !important;transition:none !important;scroll-b
 .doc li{list-style:disc;margin-inline-start:22px}
 .doc a{text-decoration:underline}
 .doc .note{border:1px dashed var(--g-dk);padding:14px 18px;color:var(--g-dk);font-size:16px;margin-bottom:16px}
+.doc p{margin-bottom:12px}
+.doc .cta-box{margin:40px 0 8px;padding:28px;background:var(--alt);border-inline-start:4px solid var(--g)}
+.doc .cta-box h2{margin-top:0}
+.doc .cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
+.doc .cta-row .btn{text-decoration:none}
+.doc .cta-row .btn-g{color:var(--on-g)}
+.doc .faq{margin-top:8px}
+.doc .faq a{text-decoration:underline}
+@media (max-width:720px){.doc{padding:40px 20px 120px}.doc h1{font-size:32px}.doc .cta-row .btn{flex:1 1 100%}}
 
 @media (prefers-reduced-motion:reduce){.flow,.bus{animation:none}html{scroll-behavior:auto}}
 
@@ -567,15 +576,9 @@ html[data-theme="dark"] .nav .brand img.logo-dk,html[data-theme="light"] .foot .
 
 /* contact form: a live wire that energizes as the form is filled */
 .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--g);box-shadow:0 0 0 3px rgba(122,185,41,.25)}
-.circuit{position:absolute;inset-inline:0;top:-3px;height:3px;pointer-events:none}
-.circuit i{position:absolute;inset-block:0;inset-inline-start:0;width:calc(var(--p,0)*100%);background:linear-gradient(90deg,var(--g),#C3F76A);box-shadow:0 0 12px rgba(166,228,74,.9);transition:width .5s cubic-bezier(.3,1.2,.5,1)}
-.circuit svg{position:absolute;top:-11px;inset-inline-start:calc(var(--p,0)*100%);width:24px;height:24px;margin-inline-start:-12px;fill:#A6E44A;filter:drop-shadow(0 0 6px rgba(166,228,74,.9));opacity:0;transform:scale(.4);transition:inset-inline-start .5s cubic-bezier(.3,1.2,.5,1),opacity .3s,transform .3s}
-.form.live .circuit svg{opacity:1;transform:scale(1)}
 .form.full .submit{animation:ready 1.6s ease-in-out infinite}
 @keyframes ready{50%{box-shadow:0 0 0 6px rgba(122,185,41,.25),0 0 22px rgba(166,228,74,.55)}}
-.form.sent .circuit svg{animation:zap .7s ease-out}
-@keyframes zap{40%{transform:scale(2.2);filter:drop-shadow(0 0 16px #C3F76A)}}
-@media (prefers-reduced-motion:reduce){.form.full .submit,.form.sent .circuit svg{animation:none}.circuit i,.circuit svg{transition:none}}
+@media (prefers-reduced-motion:reduce){.form.full .submit{animation:none}}
 
 /* "נדליק אותו" switches on like a neon sign when the contact section scrolls into view */
 .ignite{color:#4a5a38;transition:color .3s,text-shadow .3s}
@@ -587,7 +590,6 @@ html[data-theme="light"] .ignite.on{color:var(--g-dk);text-shadow:0 0 14px rgba(
 
 /* contact form polish */
 .form{border-radius:14px;padding:40px 36px 32px;gap:20px;box-shadow:0 30px 70px -36px rgba(0,0,0,.55),0 0 0 1px rgba(122,185,41,.08)}
-.form .circuit{inset-inline:14px;top:-3px;border-radius:3px}
 .field label{font-size:13.5px;font-weight:600;letter-spacing:.02em}
 .field input,.field textarea,.field select{border-radius:10px;border-width:1.5px;padding-inline:16px}
 .field input,.field select{height:52px}
@@ -653,3 +655,10 @@ html[data-theme="light"] .hero h1 .g{color:var(--g)}
 
 /* hero text sits higher on desktop */
 @media (min-width:1001px){.hero-text{align-self:start;margin-top:clamp(0px,4vh,48px);margin-inline-start:-28px}}
+
+/* contact form progress: four slim segments that fill as the key fields are completed */
+.prog{position:absolute;inset-inline:0;top:-3px;pointer-events:none}
+.prog-bar{position:relative;height:11px;border-radius:14px 14px 0 0;background:#4B5E3B;border-bottom:1px solid #62794A;overflow:hidden}
+.prog-bar i{position:absolute;inset-block:0;inset-inline-start:0;width:calc(var(--p,0)*100%);border-radius:0;background:linear-gradient(270deg,#5B8F22 0%,#8ABD36 45%,#B4F04F 85%,#E6FFA8 100%);box-shadow:0 0 12px rgba(166,228,74,.7);transition:width .22s ease-out}
+.form.full .prog-bar i{box-shadow:0 0 16px rgba(190,255,90,.95);filter:brightness(1.12) saturate(1.1)}
+@media (prefers-reduced-motion:reduce){.prog-bar i{transition:none}}

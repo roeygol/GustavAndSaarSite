@@ -5,4 +5,9 @@
   <url><loc>https://gustav-saar.co.il/services/manufacturing</loc><priority>0.8</priority></url>
   <url><loc>https://gustav-saar.co.il/services/testing</loc><priority>0.8</priority></url>
   <url><loc>https://gustav-saar.co.il/services/installation-maintenance</loc><priority>0.8</priority></url>
+  <url><loc>https://gustav-saar.co.il/panels/industrial</loc><priority>0.8</priority></url>
+  <url><loc>https://gustav-saar.co.il/panels/control</loc><priority>0.8</priority></url>
+  <url><loc>https://gustav-saar.co.il/panels/hvac</loc><priority>0.8</priority></url>
+  <url><loc>https://gustav-saar.co.il/panels/smoke-extraction</loc><priority>0.8</priority></url>
+  <url><loc>https://gustav-saar.co.il/panels/pumps</loc><priority>0.8</priority></url>
 </urlset>
