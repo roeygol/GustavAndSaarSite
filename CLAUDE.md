@@ -25,7 +25,7 @@ Until those exist `/api/contact` returns 500 and `/api/visit` silently skips sen
 
 - `index.html`: single page; sections are anchored (`#about`, `#services`, `#process`, `#projects`, `#contact`).
 - `styles.css`: all styling. Brand colors come from the logo (green `--g` #7AB929 / `--g2` #9BE33A on charcoal `--ink`); text on green uses the dark ink color for contrast. Breakpoints: 1000px (tablet), 720px (mobile).
-- `script.js`: mobile menu toggle, the interactive demo breaker panel in the hero (built from the `names` array), and contact-form validation/submit via `fetch` to `/api/contact`.
+- `script.js`: mobile menu toggle, project filters, accessibility toolbar and contact-form validation/submit via `fetch` to `/api/contact`.
 - `functions/api/contact.js`: Cloudflare Pages Function that emails form submissions (incl. project type) to Saar through Resend. Needs env vars `RESEND_API_KEY`, `CONTACT_TO`, `CONTACT_FROM` set in the Pages project; it returns 500 until they exist.
 - `functions/api/visit.js` + `functions/_lib/email.js`: visit notifications, ported from the AlonSite project. A 1×1 beacon `<img src="/api/visit?page=...">` at the top of every page's `<body>` emails Saar (`CONTACT_TO`) once per visit; dedup by cookie (`gs_visited`) + IP in Workers KV (`VISITS_KV`, 60s TTL, declared in `wrangler.toml` — replace the placeholder id). The email includes Cloudflare edge geo/ISP/device data (IP-based, approximate). `_lib/email.js` also builds the contact-form email. New pages must include the beacon with their own `page=` name.
 - `assets/logo.png`: the company's original logo. Do NOT redraw or alter it; the owner wants this exact artwork. It is raster with a white background, so it is shown on a white rounded plate (`.brand`) and also used as the favicon.
@@ -36,6 +36,17 @@ Until those exist `/api/contact` returns 500 and `/api/visit` silently skips sen
 ## Tone
 
 The owner asked to downplay the "family business / father and son" angle in site copy. Keep messaging focused on engineering, quality and service; at most a light mention.
+
+## SEO
+
+The goal is to rank the site in Google (Hebrew, Israel market) for electrical-panel engineering searches. On-page SEO is implemented: meta/canonical/OG tags, JSON-LD graph (`ElectricalContractor`, `Service`, `FAQPage`) in `index.html`, `robots.txt`, `sitemap.xml`, and `noindex` on the legal pages. The domain `https://gustav-saar.co.il` is the real domain, used in canonical/OG/sitemap/robots and JSON-LD; fill the `[...]` NAP values in the JSON-LD. Also 4 static service landing pages (`services/*.html`, generated from one template, linked from the index service rows, each with its own title/description/canonical/BreadcrumbList+Service JSON-LD and a `page=` beacon); internal links and canonicals use extensionless URLs (Cloudflare Pages strips `.html`), so preview them with `wrangler pages dev` rather than `http.server`. Their copy is draft and generic (no invented standards/claims); confirm with the owners. `_headers` sets asset caching. New pages must be added to `sitemap.xml`. Still open: a 1200×630 OG image, keyword research, project photos with `alt`, Search Console. When touching pages or content, keep these in mind:
+- Per-page `<title>`, meta description, canonical URL, `lang="he"`/`dir="rtl"`, and Open Graph/Twitter tags.
+- Structured data (JSON-LD): `LocalBusiness`/`Organization`, plus `Service` entries for the offered services.
+- `sitemap.xml` and `robots.txt` at the repo root (served as-is by Cloudflare Pages).
+- Semantic headings (a single `h1`, logical `h2`/`h3`), descriptive `alt` text on images, and Hebrew keyword-rich copy that stays natural.
+- Performance and mobile (Core Web Vitals): optimized/lazy-loaded images, no render-blocking assets.
+- Real NAP details (name, address, phone) replacing the placeholders, consistent across the site; Google Business Profile and Search Console setup after launch.
+- Keep `docs/` as the place for keyword research and SEO notes.
 
 ## Content status
 

@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>כיווני מתג למצב בהיר / כהה</title>
+<style>
+:root{--g:#7AB929;--ink:#15171A}
+*{box-sizing:border-box}
+body{margin:0;background:#0E1012;color:#E9ECEA;font-family:'IBM Plex Sans Hebrew','Heebo',system-ui,sans-serif;padding:32px 20px 64px}
+h1{font-size:30px;margin:0 0 6px}
+.sub{color:#9AA19D;margin:0 0 28px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;max-width:1280px;margin:0 auto}
+.card{background:#1D2024;border:1px solid #2E3338;border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+.stage{height:230px;display:flex;align-items:center;justify-content:center;position:relative;background:#15171A;transition:background .5s;overflow:hidden}
+.card.on .stage{background:#F1F0EA}
+.cap{padding:14px 16px;border-top:1px solid #2E3338}
+.cap b{display:block;font-size:17px}
+.cap b i{font-style:normal;color:var(--g);margin-inline-end:8px}
+.cap span{font-size:14px;color:#9AA19D}
+button{font-family:inherit;cursor:pointer;border:0;background:none;padding:0;color:inherit}
+.hint{position:absolute;bottom:8px;inset-inline:0;text-align:center;font-size:12px;color:#7d857f}
+.card.on .hint{color:#8a8f88}
+
+/* 1 wall rocker */
+.o1 .plate{width:64px;height:92px;border-radius:6px;background:linear-gradient(180deg,#FBFAF6,#E1DFD5);border:1px solid #C9C7BC;box-shadow:0 6px 14px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;position:relative}
+.o1 .slot{position:relative;width:34px;height:60px;border-radius:3px;background:#B7B5AA;box-shadow:inset 0 2px 5px rgba(0,0,0,.5)}
+.o1 .rk{position:absolute;inset:3px;border-radius:2px;background:linear-gradient(180deg,#fff,#E8E6DC);box-shadow:0 3px 4px rgba(0,0,0,.35);transform:perspective(200px) rotateX(24deg);transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
+.o1 .rk{transform:perspective(200px) rotateX(-24deg)}
+.card:not(.on) .o1 .rk{transform:perspective(200px) rotateX(24deg);background:linear-gradient(180deg,#e0ded4,#c4c2b7)}
+.card:not(.on) .o1 .plate{background:linear-gradient(180deg,#34393F,#22262A);border-color:#4A5057}
+
+/* 2 breaker */
+.o2{width:84px;height:132px;border-radius:10px;background:linear-gradient(160deg,#4A5057,#22262A 55%,#15171A);border:1px solid #5B636B;box-shadow:0 14px 28px rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:9px 0 8px}
+.o2 .t{display:flex;gap:6px;align-items:center;font-size:10px;font-weight:700;letter-spacing:.14em;color:#9AA19D}
+.o2 .led{width:8px;height:8px;border-radius:50%;background:#2A2F33;transition:.25s}
+.card.on .o2 .led{background:var(--g);box-shadow:0 0 10px 2px rgba(122,185,41,.85)}
+.o2 .tr{position:relative;width:34px;flex:1;margin:6px 0;border-radius:6px;background:#07080A;box-shadow:inset 0 3px 7px #000}
+.o2 .lv{position:absolute;inset-inline:3px;top:calc(100% - 46% - 3px);height:46%;border-radius:4px;background:linear-gradient(90deg,#8E969D,#E3E7EA 40%,#9AA2A8);transition:top .28s cubic-bezier(.3,1.5,.5,1)}
+.card.on .o2 .lv{top:3px}
+.o2 .ic{font-size:13px;opacity:.5}
+
+/* 3 pull chain bulb */
+.o3{position:relative;width:90px;height:210px;display:flex;flex-direction:column;align-items:center}
+.o3 .cord{width:2px;height:50px;background:#888}
+.o3 .bulb{width:46px;height:60px;border-radius:50% 50% 45% 45%;background:#4A5057;position:relative;transition:.3s}
+.o3 .bulb::after{content:'';position:absolute;bottom:-12px;left:50%;width:22px;height:16px;margin-left:-11px;border-radius:2px;background:#888;z-index:-1}
+.card.on .o3 .bulb{background:#FFE49A;box-shadow:0 0 40px 18px rgba(255,208,80,.75),0 0 90px 40px rgba(255,208,80,.35)}
+.o3 .chain{position:absolute;top:100px;left:calc(50% + 24px);width:2px;height:48px;background:repeating-linear-gradient(180deg,#999 0 4px,transparent 4px 7px);transform-origin:top;transition:transform .15s}
+.o3 .chain::after{content:'';position:absolute;bottom:-8px;left:-4px;width:10px;height:10px;border-radius:50%;background:#bbb}
+.o3.pull .chain{transform:translateY(14px)}
+
+/* 4 knife switch */
+.o4{position:relative;width:160px;height:150px}
+.o4 .base{position:absolute;inset:auto 0 0;height:22px;border-radius:3px;background:#6B4E3A;box-shadow:0 4px 8px rgba(0,0,0,.4)}
+.o4 .hinge,.o4 .jaw{position:absolute;bottom:22px;width:14px;height:22px;background:linear-gradient(90deg,#B87333,#E8A055,#B87333);border-radius:2px}
+.o4 .hinge{left:20px}.o4 .jaw{right:20px;height:30px}
+.o4 .blade{position:absolute;left:27px;bottom:42px;width:106px;height:8px;border-radius:2px;background:linear-gradient(180deg,#E8A055,#B87333);transform-origin:0 50%;transform:rotate(0);transition:transform .35s cubic-bezier(.4,1.5,.5,1)}
+.o4 .blade::after{content:'';position:absolute;right:-6px;top:-24px;width:10px;height:40px;border-radius:4px;background:#22262A}
+.card:not(.on) .o4 .blade{transform:rotate(-72deg)}
+.o4 .arc{position:absolute;right:14px;bottom:50px;width:28px;height:28px;border-radius:50%;background:radial-gradient(#C8FF6B,transparent 70%);opacity:0}
+.card.on .o4 .arc{opacity:.9}
+
+/* 5 day night pill */
+.o5{position:relative;width:132px;height:60px;border-radius:30px;background:linear-gradient(90deg,#4FB3FF,#9CD8FF);box-shadow:inset 0 3px 8px rgba(0,0,0,.3);overflow:hidden;transition:background .4s}
+.card:not(.on) .o5{background:linear-gradient(90deg,#10173A,#2A3470)}
+.o5 .kn{position:absolute;top:6px;inset-inline-start:6px;width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFF3B0,#FFC53D);box-shadow:0 0 18px rgba(255,200,60,.9);transition:inset-inline-start .4s cubic-bezier(.4,1.3,.5,1),background .4s,box-shadow .4s}
+.card:not(.on) .o5 .kn{inset-inline-start:78px;background:radial-gradient(circle at 35% 35%,#fff,#C9CFE6);box-shadow:0 0 14px rgba(190,200,255,.7)}
+.o5 .st{position:absolute;inset:0;opacity:0;transition:.4s;background:radial-gradient(1.5px 1.5px at 20% 30%,#fff,transparent),radial-gradient(1.5px 1.5px at 40% 70%,#fff,transparent),radial-gradient(1px 1px at 55% 25%,#fff,transparent),radial-gradient(1.5px 1.5px at 30% 55%,#fff,transparent)}
+.card:not(.on) .o5 .st{opacity:1}
+.o5 .cl{position:absolute;right:16px;bottom:8px;width:34px;height:14px;border-radius:10px;background:#fff;box-shadow:-10px -4px 0 -2px #fff;transition:.4s}
+.card:not(.on) .o5 .cl{opacity:0;transform:translateX(30px)}
+
+/* 6 rotary dial */
+.o6{position:relative;width:130px;height:130px}
+.o6 .ring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from -50deg,#444 0 100deg,transparent 100deg);opacity:.0}
+.o6 .tick{position:absolute;top:50%;left:50%;font-size:18px;transform:translate(-50%,-50%)}
+.o6 .knob{position:absolute;inset:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#7b838a,#2B3036 70%);border:2px solid #15171A;box-shadow:0 8px 16px rgba(0,0,0,.5),inset 0 2px 3px rgba(255,255,255,.25);transition:transform .35s cubic-bezier(.3,1.4,.5,1);transform:rotate(-50deg)}
+.o6 .knob::after{content:'';position:absolute;top:6px;left:50%;width:5px;height:24px;margin-left:-2.5px;border-radius:3px;background:var(--g);box-shadow:0 0 8px var(--g)}
+.card:not(.on) .o6 .knob{transform:rotate(50deg)}
+.o6 .l,.o6 .d{position:absolute;top:2px;font-size:18px}
+.o6 .l{left:6px}.o6 .d{right:6px}
+
+/* 7 neon */
+.o7{font-family:'Courier New',monospace;font-weight:700;font-size:30px;letter-spacing:.12em;padding:14px 26px;border:3px solid;border-radius:10px;transition:.3s}
+.card.on .o7{color:#6A9E1F;border-color:#6A9E1F;text-shadow:none;box-shadow:none;background:#fff}
+.card:not(.on) .o7{color:#C8FF6B;border-color:#A6E44A;text-shadow:0 0 6px #A6E44A,0 0 18px #7AB929,0 0 34px #7AB929;box-shadow:0 0 12px #7AB929,inset 0 0 12px rgba(122,185,41,.5);animation:fl 3s infinite}
+@keyframes fl{0%,18%,22%,60%,64%,100%{opacity:1}20%,62%{opacity:.35}}
+
+/* 8 key switch */
+.o8{position:relative;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#5b636b,#22262A);border:2px solid #3A4046;box-shadow:0 10px 20px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center}
+.o8 .cyl{width:50px;height:50px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#d9dde0,#8a9299);display:flex;align-items:center;justify-content:center;transition:transform .35s cubic-bezier(.3,1.4,.5,1);transform:rotate(-90deg)}
+.o8 .key{width:8px;height:38px;background:linear-gradient(90deg,#d9a441,#f4d17a,#d9a441);border-radius:3px;position:relative}
+.o8 .key::before{content:'';position:absolute;top:-6px;left:-6px;width:20px;height:14px;border-radius:50%;background:#e8b94e;z-index:-0}
+.card:not(.on) .o8 .cyl{transform:rotate(0)}
+.o8 .a,.o8 .b{position:absolute;font-size:16px}
+.o8 .a{left:-30px;top:46px}.o8 .b{top:-30px;left:47px}
+
+/* 9 slide */
+.o9{position:relative;width:190px;height:56px;border-radius:28px;background:#0B0C0E;box-shadow:inset 0 3px 8px #000;overflow:hidden;border:1px solid #3A4046}
+.o9 .fill{position:absolute;inset-block:0;inset-inline-start:0;width:60px;background:linear-gradient(90deg,transparent,rgba(122,185,41,.7));transition:width .4s}
+.card.on .o9 .fill{width:190px}
+.o9 .h{position:absolute;top:4px;inset-inline-start:4px;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#D8FF8E,#7AB929);box-shadow:0 0 14px rgba(122,185,41,.8);display:flex;align-items:center;justify-content:center;font-size:20px;color:#15171A;transition:inset-inline-start .4s cubic-bezier(.4,1.3,.5,1)}
+.card:not(.on) .o9 .h{inset-inline-start:136px;background:radial-gradient(circle at 35% 30%,#aab2b8,#4a5157);box-shadow:none}
+.o9 .tx{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;letter-spacing:.1em;color:#7d857f}
+
+/* 10 pcb jumper */
+.o10{position:relative;width:240px;height:130px}
+.o10 svg{width:100%;height:100%;overflow:visible}
+.o10 .tr{stroke:#3A5230;stroke-width:5;fill:none;stroke-linecap:round}
+.o10 .pad{fill:#15171A;stroke:#7AB929;stroke-width:3}
+.card.on .o10 .pad{fill:#F1F0EA}
+.o10 .jmp{transform-origin:70px 65px;transform:rotate(-55deg);transition:transform .35s cubic-bezier(.4,1.5,.5,1);stroke:#E8A055;stroke-width:8;stroke-linecap:round}
+.card.on .o10 .jmp{transform:rotate(0)}
+.o10 .pulse{fill:none;stroke:#A6E44A;stroke-width:5;stroke-linecap:round;stroke-dasharray:18 300;opacity:0;filter:drop-shadow(0 0 5px #A6E44A)}
+.card.on .o10 .pulse{opacity:1;animation:pl 1.3s linear infinite}
+@keyframes pl{to{stroke-dashoffset:-318}}
+.o10 .tr.lit{transition:.3s}
+.card.on .o10 .tr{stroke:#7AB929}
+</style>
+</head>
+<body>
+<h1>10 כיווני מתג לאתר</h1>
+<p class="sub">לחצו על כל מתג כדי לראות איך הוא מרגיש. הרקע מתחלף בין מצב בהיר לכהה, כמו באתר. תגידו לי איזה מספר.</p>
+<div class="grid">
+
+<div class="card on"><div class="stage"><button class="o1" data-t aria-label="מתג"><span class="plate"><span class="slot"><span class="rk"></span></span></span></button><div class="hint">לחצו</div></div><div class="cap"><b><i>1</i>מתג קיר קלאסי</b><span>כמו מתג אור בכניסה לחדר. נדנדה שמתהפכת.</span></div></div>
+
+<div class="card on"><div class="stage"><button class="o2" data-t aria-label="מתג"><span class="t"><span class="led"></span>MAIN</span><span class="ic">☀</span><span class="tr"><span class="lv"></span></span><span class="ic">☾</span></button><div class="hint">לחצו</div></div><div class="cap"><b><i>2</i>מפסק ראשי (הנוכחי)</b><span>ידית תעשייתית, נורית, ניצוצות והבזק באתר.</span></div></div>
+
+<div class="card on"><div class="stage"><button class="o3" data-t data-pull aria-label="מתג"><span class="cord"></span><span class="bulb"></span><span class="chain"></span></button><div class="hint">משכו את השרשרת</div></div><div class="cap"><b><i>3</i>נורה עם שרשרת משיכה</b><span>נורה תלויה שנדלקת במשיכה. אור אמיתי שזורח על האתר.</span></div></div>
+
+<div class="card on"><div class="stage"><button class="o4" data-t aria-label="מתג"><span class="base"></span><span class="hinge"></span><span class="jaw"></span><span class="blade"></span><span class="arc"></span></button><div class="hint">סגרו את המעגל</div></div><div class="cap"><b><i>4</i>מפסק סכין וינטג'י</b><span>הלהב נסגר, מתח עובר. מראה מעבדה משנות ה-20.</span></div></div>
+
+<div class="card on"><div class="stage"><button class="o5" data-t aria-label="מתג"><span class="st"></span><span class="cl"></span><span class="kn"></span></button><div class="hint">לחצו</div></div><div class="cap"><b><i>5</i>יום / לילה</b><span>שמש הופכת לירח עם כוכבים. הכי מוכר וידידותי.</span></div></div>
+
+<div class="card on"><div class="stage"><button class="o6" data-t aria-label="מתג"><span class="l">☀</span><span class="d">☾</span><span class="knob"></span></button><div class="hint">לחצו כדי לסובב</div></div><div class="cap"><b><i>6</i>בורר מסתובב</b><span>כפתור סיבוב כמו בלוח פיקוד, עם נורית אינדיקציה.</span></div></div>
+
+<div class="card on"><div class="stage"><button class="o7" data-t aria-label="מתג">LIGHT</button><div class="hint">לחצו</div></div><div class="cap"><b><i>7</i>שלט ניאון</b><span>שלט שמהבהב ונדלק בלילה. הכי "וואו" בחושך.</span></div></div>
+
+<div class="card on"><div class="stage"><button class="o8" data-t aria-label="מתג"><span class="a">☀</span><span class="b">☾</span><span class="cyl"><span class="key"></span></span></button><div class="hint">סובבו את המפתח</div></div><div class="cap"><b><i>8</i>מתג מפתח</b><span>מפתח שמסובבים בלוח. מרגיש כמו הפעלת מכונה.</span></div></div>
+
+<div class="card on"><div class="stage"><button class="o9" data-t aria-label="מתג"><span class="fill"></span><span class="tx">החליקו</span><span class="h">⏻</span></button><div class="hint">לחצו</div></div><div class="cap"><b><i>9</i>סליידר הפעלה</b><span>גלגל מחליק עם זוהר ירוק, כמו הפעלת מכשיר.</span></div></div>
+
+<div class="card on"><div class="stage"><button class="o10" data-t aria-label="מתג"><svg viewBox="0 0 240 130"><path class="tr" d="M0 65H34M206 65H240"/><path class="pulse" d="M0 65H34M70 65H170M206 65H240"/><circle class="pad" cx="70" cy="65" r="13"/><circle class="pad" cx="170" cy="65" r="13"/><line class="jmp" x1="70" y1="65" x2="170" y2="65"/></svg></button><div class="hint">סגרו את המעגל</div></div><div class="cap"><b><i>10</i>גשר במעגל מודפס</b><span>גשר שנסגר בין שני פדים, והזרם רץ בקו. מתאים לשרטוט שבהירו.</span></div></div>
+
+</div>
+<script>
+document.querySelectorAll('[data-t]').forEach(function(b){
+  b.addEventListener('click',function(){
+    var c=b.closest('.card');c.classList.toggle('on');
+    if(b.hasAttribute('data-pull')){b.classList.add('pull');setTimeout(function(){b.classList.remove('pull')},180)}
+  });
+});
+</script>
+</body>
+</html>

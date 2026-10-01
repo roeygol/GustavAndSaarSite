@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>20 מתגים שהם חלק מהמעגל</title>
+<style>
+:root{--g:#7AB929;--g2:#A6E44A}
+*{box-sizing:border-box}
+body{margin:0;background:#0E1012;color:#E9ECEA;font-family:'IBM Plex Sans Hebrew','Heebo',system-ui,sans-serif;padding:32px 20px 64px}
+h1{font-size:30px;margin:0 0 6px}
+.sub{color:#9AA19D;margin:0 0 28px;max-width:760px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px;max-width:1360px;margin:0 auto}
+.card{background:#1D2024;border:1px solid #2E3338;border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+.stage{height:190px;position:relative;background:#15171A;transition:background .5s;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.card.on .stage{background:#F1F0EA}
+.stage svg{width:100%;height:100%;display:block}
+.stage::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:24px 24px;pointer-events:none}
+.card.on .stage::after{background-image:linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px)}
+.cap{padding:11px 14px;border-top:1px solid #2E3338}
+.cap b{display:block;font-size:16px}
+.cap b i{font-style:normal;color:var(--g);margin-inline-end:8px}
+.cap span{font-size:13px;color:#9AA19D}
+/* shared */
+.tr{fill:none;stroke:#3A5230;stroke-width:5;stroke-linecap:round;transition:stroke .3s}
+.card.on .tr{stroke:var(--g)}
+.pl{fill:none;stroke:var(--g2);stroke-width:5;stroke-linecap:round;stroke-dasharray:20 380;opacity:0;filter:drop-shadow(0 0 5px var(--g2))}
+.card.on .pl{opacity:1;animation:pl 1.5s linear infinite}
+@keyframes pl{from{stroke-dashoffset:20}to{stroke-dashoffset:-400}}
+.pad{fill:#15171A;stroke:var(--g);stroke-width:3.5}
+.card.on .pad{fill:#F1F0EA}
+.cu{fill:url(#cu);stroke:#4F7D12;stroke-width:1}
+.mt{fill:#9AA19D;stroke:#5A605C;stroke-width:1}
+.dk{fill:#22262A;stroke:#5A605C;stroke-width:1.5}
+.lt{fill:#F1F0EA;stroke:#9AA19D;stroke-width:1.5}
+.glow{opacity:0;transition:opacity .3s}
+.card.on .glow{opacity:1}
+.mv{transition:transform .38s cubic-bezier(.4,1.5,.5,1)}
+.txt{font:600 11px 'IBM Plex Sans Hebrew',sans-serif;fill:#9AA19D}
+.card.on .txt{fill:#5A605C}
+
+/* 1 knife */
+.k1{transform-origin:100px 75px;transform:rotate(-60deg)}.card.on .k1{transform:rotate(0)}
+/* 2 elevator bridge */
+.k2{transform:translateY(-46px);opacity:.5}.card.on .k2{transform:translateY(0);opacity:1}
+.k2{transition:transform .35s cubic-bezier(.4,1.4,.5,1),opacity .3s}
+/* 3 rotary disc */
+.k3{transform-origin:150px 75px;transform:rotate(90deg)}.card.on .k3{transform:rotate(0)}
+/* 5 relay */
+.k5{transform-origin:112px 75px;transform:rotate(-16deg)}.card.on .k5{transform:rotate(0)}
+/* 6 fuse */
+.k6b{opacity:1}.card.on .k6b{opacity:0}
+.k6s{opacity:0;transition:opacity .4s}.card:not(.on) .k6s{opacity:1;animation:smoke 2s ease-out infinite}
+@keyframes smoke{from{transform:translateY(0);opacity:.7}to{transform:translateY(-22px);opacity:0}}
+/* 7 push button */
+.k7{transform-origin:150px 75px;transform:scale(.88);transition:transform .15s}.card:not(.on) .k7{transform:scale(1)}
+.k7c{fill:#33393F;stroke:#5A605C;stroke-width:2}.card.on .k7c{fill:var(--g)}
+/* 8 drawbridge */
+.k8{transform-origin:100px 75px;transform:rotate(-78deg)}.card.on .k8{transform:rotate(0)}
+.k8w{fill:none;stroke:#3A4046;stroke-width:2;stroke-dasharray:3 4}
+.card.on .k8w{stroke:#B9BFBB}
+/* 9 shunt */
+.k9{transform:translateY(-36px) rotate(-8deg);transform-origin:150px 75px}.card.on .k9{transform:translateY(0) rotate(0)}
+/* 10 mini breaker */
+.k10{transform:translateY(16px)}.card.on .k10{transform:translateY(-16px)}
+/* 11 plug */
+.k11{transform:translateX(-54px)}.card.on .k11{transform:translateX(0)}
+/* 12 solder */
+.k12{transform-origin:150px 75px;transform:scaleX(.05)}.card.on .k12{transform:scaleX(1)}
+.k12b{opacity:1}.card.on .k12b{opacity:0}
+.k12,.k12b{transition:transform .45s cubic-bezier(.3,1.3,.5,1),opacity .3s}
+/* 13 spark gap */
+.k13{opacity:0}.card.on .k13{opacity:1;animation:fz .25s steps(2) infinite}
+@keyframes fz{50%{transform:translateY(2px)}}
+/* 14 lug */
+.k14{transform-origin:230px 75px;transform:rotate(42deg)}.card.on .k14{transform:rotate(0)}
+/* 15 potentiometer */
+.k15{transform-origin:150px 75px;transform:rotate(-125deg)}.card.on .k15{transform:rotate(125deg)}
+.k15{transition:transform .5s cubic-bezier(.4,1.2,.5,1)}
+/* 16 reed */
+.k16m{transform:translate(64px,32px)}.card.on .k16m{transform:translate(0,0)}
+.k16a{transform-origin:128px 75px;transform:rotate(-14deg)}.card.on .k16a{transform:rotate(0)}
+.k16b{transform-origin:172px 75px;transform:rotate(14deg)}.card.on .k16b{transform:rotate(0)}
+/* 17 gate */
+.k17{transform:translateY(0)}.card.on .k17{transform:translateY(-44px)}
+/* 18 slide latch */
+.k18{transform:translateX(-86px)}.card.on .k18{transform:translateX(0)}
+/* 19 drop-out fuse */
+.k19{transform-origin:100px 75px;transform:rotate(70deg)}.card.on .k19{transform:rotate(0)}
+/* 20 chip */
+.k20{transform:translateY(-52px)}.card.on .k20{transform:translateY(0)}
+.hint{position:absolute;bottom:6px;inset-inline:0;text-align:center;font-size:11px;color:#6d756f;z-index:2;pointer-events:none}
+</style>
+</head>
+<body>
+<h1>20 מתגים שהם חלק מהמעגל</h1>
+<p class="sub">כל כרטיס הוא קטע מעגל חשמלי. לחצו על כל אחד: מצב בהיר = המעגל סגור והזרם עובר, מצב כהה = המעגל פתוח. תגידו לי איזה מספר.</p>
+<div class="grid" id="grid"></div>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+<linearGradient id="cu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E4FFB0"/><stop offset="1" stop-color="#7AB929"/></linearGradient>
+<linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#9CB" stop-opacity=".25"/></linearGradient>
+<radialGradient id="gl"><stop offset="0" stop-color="#D6FF9A" stop-opacity=".9"/><stop offset="1" stop-color="#7AB929" stop-opacity="0"/></radialGradient>
+</defs></svg>
+
+<script>
+var S=function(inner,stubs){return '<svg viewBox="0 0 300 150" preserveAspectRatio="xMidYMid meet" style="overflow:hidden">'+(stubs||'<path class="tr" d="M0 75H90M210 75H300"/>')+'<path class="pl" d="M0 75H300"/>'+inner+'</svg>'};
+var pads='<circle class="pad" cx="100" cy="75" r="10"/><circle class="pad" cx="200" cy="75" r="10"/>';
+var items=[
+['מפסק סכין (הנוכחי)','להב על ציר שנסגר על שני פדים.',S(pads+'<circle class="glow" cx="200" cy="75" r="26" fill="url(#gl)"/><g class="mv k1"><rect class="cu" x="96" y="70" width="108" height="10" rx="3.5"/><rect class="dk" x="152" y="46" width="12" height="26" rx="4"/><circle class="dk" cx="100" cy="75" r="5"/></g>')],
+['גשר מוריד מלמעלה','פס נחושת יורד מלמעלה ונוחת על הפדים.',S(pads+'<g class="k2"><rect class="cu" x="92" y="64" width="116" height="12" rx="4"/><rect class="dk" x="140" y="44" width="20" height="20" rx="4"/></g>')],
+['דיסק מסתובב','דיסק עם מגע שמסתובב עד שהוא מתיישר עם הקו.','<svg viewBox="0 0 300 150" style="overflow:hidden"><path class="tr" d="M0 75H116M184 75H300"/><path class="pl" d="M0 75H300"/><circle cx="150" cy="75" r="38" class="dk"/><circle cx="150" cy="75" r="30" fill="none" stroke="#3A4046" stroke-dasharray="2 5"/><g class="mv k3"><rect class="cu" x="116" y="69" width="68" height="12" rx="6"/><circle class="dk" cx="150" cy="75" r="7"/></g></svg>'],
+['מתג DIP','בלוק מתגים זעיר על הלוח. הידית הלבנה זזה.','<svg viewBox="0 0 300 150" style="overflow:hidden"><path class="tr" d="M0 75H104M196 75H300"/><path class="pl" d="M0 75H300"/><rect class="dk" x="104" y="44" width="92" height="62" rx="5"/><g id="dp"></g><circle class="glow" cx="188" cy="52" r="3" fill="#A6E44A"/></svg>'],
+['ממסר','ממסר עם סליל. הזרוע מקליקה פנימה.','<svg viewBox="0 0 300 150" style="overflow:hidden"><path class="tr" d="M0 75H100M200 75H300"/><path class="pl" d="M0 75H300"/><rect class="dk" x="100" y="40" width="100" height="70" rx="6"/><circle cx="130" cy="95" r="9" fill="none" stroke="#B87333" stroke-width="3"/><circle cx="130" cy="95" r="4" fill="none" stroke="#B87333" stroke-width="2"/><circle class="pad" cx="112" cy="75" r="6"/><circle class="pad" cx="188" cy="75" r="6"/><g class="mv k5"><rect class="cu" x="108" y="71" width="84" height="8" rx="3"/></g><circle class="glow" cx="188" cy="52" r="5" fill="#A6E44A"/></svg>'],
+['נתיך','נתיך זכוכית. שלם = זרם, שרוף = חוט שבור.','<svg viewBox="0 0 300 150" style="overflow:hidden"><path class="tr" d="M0 75H96M204 75H300"/><path class="pl" d="M0 75H300"/><rect x="104" y="58" width="92" height="34" rx="10" fill="url(#glass)" stroke="#9AA19D" stroke-width="2"/><rect class="mt" x="92" y="55" width="16" height="40" rx="4"/><rect class="mt" x="192" y="55" width="16" height="40" rx="4"/><path class="tr" d="M108 75H132M168 75H192" style="stroke-width:4"/><path class="tr" d="M132 75L142 68L150 82L158 70L168 75" style="stroke-width:3"/><g class="k6b"><path d="M132 75L142 68M158 70L168 75" stroke="#15171A" stroke-width="5" opacity="0"/></g><g class="k6s"><circle cx="150" cy="68" r="4" fill="#8a8f88"/><circle cx="144" cy="60" r="3" fill="#8a8f88"/></g></svg>'],
+['כפתור לחיצה','כפתור SMD שנלחץ ונסגר.','<svg viewBox="0 0 300 150" style="overflow:hidden"><path class="tr" d="M0 75H112M188 75H300"/><path class="pl" d="M0 75H300"/><rect class="dk" x="112" y="48" width="76" height="54" rx="6"/><circle class="pad" cx="112" cy="75" r="7"/><circle class="pad" cx="188" cy="75" r="7"/><g class="k7"><circle class="k7c" cx="150" cy="75" r="19"/><circle cx="150" cy="75" r="9" fill="rgba(255,255,255,.18)"/></g></svg>'],
+['גשר מתרומם','גשר מתרומם שמעל תעלה. יורד כשסוגרים.',S(pads+'<rect x="110" y="68" width="80" height="14" fill="none" class="k8w"/><g class="mv k8"><rect class="cu" x="96" y="69" width="108" height="12" rx="3"/><path d="M110 69V57M150 69V57M190 69V57M110 57H190" stroke="#15171A" stroke-width="2" fill="none"/></g>')],
+['קפיצה על פינים','מכסה קפיצה (jumper cap) שמתיישב על שני פינים.',S('<rect class="mt" x="122" y="66" width="16" height="18" rx="2"/><rect class="mt" x="162" y="66" width="16" height="18" rx="2"/><path class="tr" d="M90 75H122M178 75H210"/><g class="mv k9"><rect class="dk" x="116" y="60" width="68" height="30" rx="6"/><rect x="124" y="68" width="14" height="14" rx="2" fill="#B87333"/><rect x="162" y="68" width="14" height="14" rx="2" fill="#B87333"/></g>','<path class="tr" d="M0 75H122M178 75H300"/>')],
+['מפסק אוטומטי זעיר','מפסק זעיר שיושב בתוך הקו. הידית עולה ויורדת.','<svg viewBox="0 0 300 150" style="overflow:hidden"><path class="tr" d="M0 75H116M184 75H300"/><path class="pl" d="M0 75H300"/><rect class="dk" x="116" y="38" width="68" height="74" rx="6"/><rect x="138" y="48" width="24" height="54" rx="5" fill="#07080A"/><g class="mv k10"><rect class="lt" x="141" y="68" width="18" height="24" rx="3"/></g><circle class="pad" cx="116" cy="75" r="5"/><circle class="pad" cx="184" cy="75" r="5"/><circle class="glow" cx="172" cy="48" r="4" fill="#A6E44A"/></svg>'],
+['תקע ושקע','תקע שנדחף לשקע. כמו חיבור כבל אמיתי.','<svg viewBox="0 0 300 150" style="overflow:hidden"><path class="pl" d="M0 75H300"/><rect class="dk" x="196" y="52" width="60" height="46" rx="8"/><rect x="204" y="68" width="22" height="5" rx="2" fill="#07080A"/><rect x="204" y="78" width="22" height="5" rx="2" fill="#07080A"/><path class="tr" d="M256 75H300"/><g class="mv k11"><path class="tr" d="M-200 75H120"/><rect class="lt" x="120" y="58" width="52" height="34" rx="6"/><rect class="mt" x="172" y="68" width="26" height="5"/><rect class="mt" x="172" y="78" width="26" height="5"/></g></svg>'],
+['גשר הלחמה','טיפת הלחמה שנמרחת וסוגרת את הפער.',S(pads+'<ellipse class="k12b" cx="94" cy="75" rx="7" ry="7" fill="#C9CDD0"/><ellipse class="k12b" cx="206" cy="75" rx="7" ry="7" fill="#C9CDD0"/><g class="k12"><ellipse cx="150" cy="75" rx="62" ry="10" fill="#D9DDE0" stroke="#8a9299"/><ellipse cx="140" cy="71" rx="30" ry="3" fill="#fff" opacity=".7"/></g>')],
+['פער ניצוץ','שתי אלקטרודות, ובהדלקה קשת חשמלית חוצה.',S('<path class="mt" d="M90 75H132L140 71V79Z"/><path class="mt" d="M210 75H168L160 71V79Z"/><g class="k13"><path d="M140 75L146 66L150 82L155 68L160 75" stroke="#EAFFB8" stroke-width="3" fill="none" stroke-linejoin="round" style="filter:drop-shadow(0 0 6px #A6E44A)"/></g>','<path class="tr" d="M0 75H132M168 75H300"/>')],
+['חוט עם לשונית','כבל שמוצמד לפד ונתלש ממנו.',S('<circle class="pad" cx="150" cy="75" r="10"/><path class="tr" d="M230 75H300"/>','<path class="tr" d="M0 75H140M230 75H300"/>')+''],
+['פוטנציומטר','כפתור סיבוב עם סקלה, שמסתובב בין שמש לירח.','<svg viewBox="0 0 300 150" style="overflow:hidden"><path class="tr" d="M0 75H112M188 75H300"/><path class="pl" d="M0 75H300"/><path d="M94 112A62 62 0 1 1 206 112" fill="none" stroke="#3A4046" stroke-width="3" stroke-dasharray="2 5"/><text class="txt" x="86" y="130">☀</text><text class="txt" x="204" y="130">☾</text><circle class="dk" cx="150" cy="75" r="38"/><g class="k15"><circle cx="150" cy="75" r="30" fill="#33393F"/><rect x="147" y="46" width="6" height="22" rx="3" fill="#A6E44A" style="filter:drop-shadow(0 0 4px #A6E44A)"/></g></svg>'],
+['מתג Reed ומגנט','מגנט מתקרב והלהבים הדקים נוגעים.','<svg viewBox="0 0 300 150" style="overflow:hidden"><path class="tr" d="M0 75H100M200 75H300"/><path class="pl" d="M0 75H300"/><rect x="104" y="60" width="92" height="30" rx="14" fill="url(#glass)" stroke="#9AA19D" stroke-width="2"/><g class="mv k16a"><rect class="cu" x="100" y="72" width="30" height="6" rx="2"/></g><g class="mv k16b"><rect class="cu" x="170" y="72" width="30" height="6" rx="2"/></g><g class="mv k16m"><rect x="116" y="104" width="34" height="16" rx="3" fill="#E9ECEA" stroke="#5A605C"/><rect x="150" y="104" width="34" height="16" rx="3" fill="#7AB929" stroke="#4F7D12"/></g></svg>'],
+['שער מעלה','שער ברזל חוסם את הקו ועולה כשמדליקים.',S('<rect class="dk" x="136" y="30" width="28" height="12" rx="3"/><g class="mv k17"><path d="M142 42V104M150 42V104M158 42V104" stroke="#9AA19D" stroke-width="3"/><rect x="138" y="100" width="24" height="6" rx="2" fill="#7AB929"/></g>','<path class="tr" d="M0 75H300"/>')],
+['בריח הזזה','בריח שמחליק לתוך השקע וסוגר את הקו.',S(pads+'<rect x="94" y="62" width="112" height="26" rx="5" fill="none" stroke="#3A4046" stroke-dasharray="3 4"/><g class="mv k18"><rect class="cu" x="96" y="66" width="108" height="18" rx="5"/><rect class="dk" x="128" y="58" width="14" height="34" rx="3"/></g>')],
+['נתיך נשלף (Drop-out)','צינור נתיך שנופל כלפי מטה, כמו בעמודי חשמל.',S(pads+'<g class="mv k19"><rect x="100" y="66" width="100" height="18" rx="9" fill="#E9ECEA" stroke="#9AA19D" stroke-width="2"/><rect x="190" y="64" width="14" height="22" rx="4" fill="#B87333"/><circle cx="206" cy="75" r="5" fill="none" stroke="#5A605C" stroke-width="2.5"/></g>')],
+['שבב ברק','שבב עם סמל ברק שנכנס לחריץ ומשלים את המעגל.',S('<rect x="120" y="60" width="60" height="30" rx="4" fill="none" stroke="#3A4046" stroke-width="2" stroke-dasharray="4 3"/><circle class="pad" cx="120" cy="75" r="7"/><circle class="pad" cx="180" cy="75" r="7"/><g class="mv k20"><rect class="dk" x="124" y="62" width="52" height="26" rx="4"/><path d="M152 66L140 78H148L144 86L160 74H152Z" fill="#A6E44A"/></g>','<path class="tr" d="M0 75H113M187 75H300"/>')]
+];
+var g=document.getElementById('grid');
+items.forEach(function(it,i){
+  var c=document.createElement('div');c.className='card on';
+  c.innerHTML='<div class="stage" role="button" tabindex="0">'+it[2]+'<div class="hint">לחצו</div></div><div class="cap"><b><i>'+(i+1)+'</i>'+it[0]+'</b><span>'+it[1]+'</span></div>';
+  g.appendChild(c);
+  var st=c.querySelector('.stage');
+  st.addEventListener('click',function(){c.classList.toggle('on')});
+});
+// DIP (4): three sliders, the first one is the real switch
+(function(){var d=document.getElementById('dp');if(!d)return;var h='';for(var i=0;i<3;i++){var x=116+i*26;h+='<rect x="'+x+'" y="52" width="16" height="46" rx="3" fill="#07080A"/><rect class="'+(i==0?'dip':'')+'" x="'+(x+2)+'" y="'+(i==0?54:78)+'" width="12" height="18" rx="2" fill="#F1F0EA" style="transition:transform .25s"/>'}d.innerHTML=h;
+var st=document.createElement('style');st.textContent='.card:not(.on) .dip{transform:translateY(22px)}.card.on .dip{transform:translateY(0)}';document.head.appendChild(st)})();
+// 14 (lug) built by hand to include the pivoting arm
+(function(){var card=document.querySelectorAll('.card')[13];var svg=card.querySelector('svg');var g=document.createElementNS('http://www.w3.org/2000/svg','g');g.setAttribute('class','mv k14');g.innerHTML='<path class="tr" d="M230 75H300" style="stroke-width:5"/><path d="M230 75H150" stroke="#9AA19D" stroke-width="4" stroke-linecap="round" fill="none"/><circle cx="150" cy="75" r="14" fill="none" stroke="#B87333" stroke-width="5"/><circle cx="150" cy="75" r="5" fill="#15171A"/>';svg.appendChild(g)})();
+</script>
+</body>
+</html>
