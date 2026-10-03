@@ -175,7 +175,13 @@
 
   // Hero graphic: side buses (like the background traces) that plug into the central chip
   var mBus = document.getElementById('mBus');
-  var busAnim = [];
+  // geometry of the scroll strip at the right edge: wide screens get a wider strip with room for more lines
+  function stripGeom() {
+    var small = window.innerWidth <= 720, cw = document.documentElement.clientWidth, gap = Math.max(0, (cw - 1200) / 2);
+    var SW = small ? 22 : Math.max(52, Math.min(92, Math.floor(gap - 4)));
+    return { small: small, SW: SW, SR: small ? 2 : Math.max(4, gap - SW), max: small ? 1 : Math.max(3, Math.min(5, Math.floor((SW - 30) / 10) + 1)) };
+  }
+  var busAnim = [], heroArrive = []; // heroArrive[i]: ms into the cycle when output line i's pulse reaches the bottom of the hero
   if (mBus) {
     var NSB = 'http://www.w3.org/2000/svg';
     var baseL = [[-700, 190], [-380, 190], [-320, 250], [-320, 300], [-284, 336], [-74, 336]];
@@ -216,8 +222,8 @@
       var svg = flow.ownerSVGElement, ctm = svg.getScreenCTM();
       if (!ctm) return null;
       var inv = ctm.inverse(), small = window.innerWidth <= 720, cw = document.documentElement.clientWidth;
-      var sr = small ? 2 : Math.max(4, (cw - 1200) / 2 - 52);
-      var xs = (small ? [sr + 8, sr + 8, sr + 8] : [sr + 6, sr + 13, sr + 20]).map(function (d) { return cw - d; });
+      var sr = stripGeom().SR;
+      var xs = (small ? [sr + 8, sr + 8, sr + 8] : [sr + 6, sr + 16, sr + 26]).map(function (d) { return cw - d; });
       var hb = document.querySelector('.hero').getBoundingClientRect().bottom, pt = svg.createSVGPoint();
       var cta = document.querySelector('.cta-row'), ctaY = 0;
       if (cta) { pt.x = 0; pt.y = cta.getBoundingClientRect().bottom; ctaY = pt.matrixTransform(inv).y; }
@@ -268,6 +274,7 @@
       el.style.strokeDasharray = HEAD + ' ' + L;
       flow.appendChild(el);
       var run = 0.8; // fraction of the cycle the pulse travels
+      heroArrive[st.ti] = st.delay + run * D * L / (L + HEAD);
       anims.push(el.animate([
         { strokeDashoffset: HEAD, opacity: 1, offset: 0 },
         { strokeDashoffset: -L, opacity: 1, offset: run },
@@ -293,12 +300,17 @@
         { strokeDashoffset: -bA.len, opacity: 0, offset: 1 }
       ], { duration: D, delay: dl, iterations: Infinity, easing: 'linear' }));
     });
+    // pin every animation to the document timeline so the strip below can stay in phase with them (also survives rebuilds)
+    anims.forEach(function (a) { a.startTime = 0; });
     };
     build();
     applyMotion();
     var rt = 0;
     window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { build(); applyMotion(); }, 150); });
     window.addEventListener('load', build);
+    // the hero can change height after first paint (fonts, wrapping): re-aim the output lines at the strip
+    if (window.ResizeObserver) new ResizeObserver(function () { clearTimeout(rt); rt = setTimeout(function () { build(); applyMotion(); }, 100); }).observe(document.querySelector('.hero'));
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { build(); applyMotion(); });
   }
 
   // Scroll-linked current: a fixed strip at the right edge (next to the text) carries the hero's current
@@ -309,31 +321,189 @@
   spine.setAttribute('aria-hidden', 'true');
   document.body.appendChild(spine);
   var sctx = spine.getContext('2d');
-  var PADL = 40, SW = 44, SH = 0, SR = 4, dpr = 1, strands = [34, 26, 18], stubEnd = 2;
-  var marks = [], lit = [], litAt = [], startY = 0;
-  var pulses = [], lastY = window.scrollY, vel = 0, last = 0, burst = 0, nextBurst = 2500;
+  var PADL = 260, PADR = 14, maxLanes = 3, markNode = [], SW = 44, SH = 0, SR = 4, dpr = 1, strands = [34, 26, 18], stubEnd = 2;
+  var marks = [], lit = [], litAt = [], startY = 0, link = null;
+  var rings = [], seeded = false, handed = [], pulses = [], lastY = window.scrollY, vel = 0, last = 0, burst = 0, nextBurst = 2500;
   var rootEl = document.documentElement;
   function measure() {
     var small = window.innerWidth <= 720, cw = rootEl.clientWidth;
-    SW = small ? 22 : 52; strands = small ? [SW - 8] : [SW - 6, SW - 13, SW - 20];
-    SR = small ? 2 : Math.max(4, (cw - 1200) / 2 - 52);
+    var G = stripGeom(); SW = G.SW; SR = G.SR; maxLanes = G.max;
+    strands = small ? [SW - 8] : [SW - 6, SW - 16, SW - 26];
     SH = window.innerHeight; dpr = window.devicePixelRatio || 1;
-    spine.style.right = SR + 'px'; spine.style.width = (SW + PADL) + 'px'; spine.style.height = SH + 'px';
-    spine.width = (SW + PADL) * dpr; spine.height = SH * dpr; sctx.setTransform(dpr, 0, 0, dpr, PADL * dpr, 0); // x = 0 is the strip's left edge; PADL px to its left are room for the rings
+    spine.style.right = (SR - PADR) + 'px'; spine.style.width = (SW + PADL + PADR) + 'px'; spine.style.height = SH + 'px';
+    spine.width = (SW + PADL + PADR) * dpr; spine.height = SH * dpr; sctx.setTransform(dpr, 0, 0, dpr, PADL * dpr, 0); // x = 0 is the strip's left edge; PADL px to its left are room for the rings
     var contentRight = cw / 2 + Math.min(1200, cw - (small ? 40 : 64)) / 2, gap = cw - contentRight;
     stubEnd = Math.max(small ? 7 : 9, SW - (gap - SR) + 2);
     var sy = window.scrollY, hero = document.querySelector('.hero');
-    startY = hero ? hero.getBoundingClientRect().bottom + sy : 0;
+    startY = hero ? hero.getBoundingClientRect().bottom + sy - 2 : 0;
+    markNode = [];
+    var stripLeft = cw - SR - SW, rg = document.createRange();
     marks = [].map.call(document.querySelectorAll('main > section:not(.hero)'), function (sec) {
       var hd = sec.querySelector('.eyebrow, h2');
       var r = (hd || sec).getBoundingClientRect();
+      if (hd) { rg.selectNodeContents(hd); markNode.push(rg.getBoundingClientRect().right + 16 - stripLeft); } else markNode.push(null);
       return hd ? r.top + sy + Math.min(14, r.height / 2) : r.top + sy + 40;
     });
+    // the process timeline (the line above the four steps) gets a trace from the strip into its end
+    link = null;
+    var stepsEl = document.querySelector('.steps');
+    if (stepsEl && !small && window.innerWidth > 1000) {
+      var sr2 = stepsEl.getBoundingClientRect();
+      link = { y: sr2.top + sy + 6, x: sr2.right - stripLeft };
+    }
     lit = marks.map(function () { return false; }); litAt = marks.map(function () { return 0; });
+    buildLanes();
   }
-  function spawn(dir, anywhere) {
+  // Lane model: lines run down the strip in numbered slots (0 = rightmost). The bundle grows and shrinks at its left
+  // end: a new line splits off the leftmost one, or the leftmost line merges back. At most headings the leftmost
+  // line peels off, bends 45 degrees and runs straight to a node right next to the heading's name; the others get a tap.
+  var PLAN = [[3, 0], [4, 1], [5, 1], [3, 0], [4, 1], [2, 0], [3, 1], [5, 1], [4, 0], [3, 1], [2, 0], [4, 1]];
+  var lanes = [], branches = [], splits = [], merges = [], peels = [], burstT = [], stubs = [], evY = [], extras = [];
+  function buildLanes() {
+    var n = strands.length, end = rootEl.scrollHeight + 200, SP = 10, J = 10;
+    var sx = function (k) { return strands[0] - SP * k; };
+    lanes = []; branches = []; splits = []; merges = []; peels = []; stubs = []; evY = []; extras = [];
+    burstT = marks.map(function () { return 0; });
+    var open = [], slotLane = [], a = n;
+    var openLane = function (pts) { lanes.push([pts]); return lanes.length - 1; };
+    strands.forEach(function (x0, k) { open[k] = [[startY, x0]]; slotLane[k] = openLane(open[k]); });
+    var transition = function (target, y0, y1) {
+      target = Math.max(Math.min(2, n), Math.min(maxLanes, target));
+      var cnt = Math.abs(target - a); if (!cnt || y1 - y0 < 40 * cnt) return;
+      for (var i = 1; i <= cnt; i++) {
+        var y = y0 + (y1 - y0) * i / (cnt + 1);
+        if (target > a) {
+          var np = [[y, sx(a - 1)], [y + J, sx(a)]], id = openLane(np);
+          evY.push(y); splits.push({ y: y, parent: slotLane[a - 1], child: id }); open[a] = np; slotLane[a] = id; a++;
+        } else {
+          open[a - 1].push([y, sx(a - 1)], [y + J, sx(a - 2)]);
+          evY.push(y); merges.push({ lane: slotLane[a - 1], into: slotLane[a - 2] }); a--;
+        }
+      }
+    };
+    // the last two headings always sit on exactly three lines
+    var plan = function (j) { return j >= marks.length - 2 ? [3, 0] : PLAN[j % PLAN.length]; };
+    if (n >= 3 && marks.length) transition(plan(0)[0], startY + 60, marks[0] - 60);
+    marks.forEach(function (m, j) {
+      var pl = plan(j), lx = sx(a - 1), peel = n >= 3 && pl[1] && a > 2;
+      var nodeX = markNode[j] == null ? stubEnd : Math.max(-PADL + 12, Math.min(markNode[j], lx - 14));
+      if (markNode[j] == null || markNode[j] > lx - 14) nodeX = Math.min(stubEnd, lx);
+      if (n >= 3 && j === marks.length - 1 && a >= 3) {
+        // finale at the last heading: the outer-left line bends 45 degrees into a big node; the other two carry on down the page
+        var px = Math.max(nodeX + 6, Math.min(nodeX + 24, lx - 8)), paths = [];
+        for (var k = 2; k < a; k++) {
+          var xk = sx(k), yk = m - (xk - px);
+          open[k].push([yk, xk]); peels.push({ lane: slotLane[k], y: yk, mark: j });
+          paths.push([[xk, yk], [px, m], [nodeX, m]]);
+        }
+        branches.push(paths[0]); extras[j] = paths.slice(1); a = 2; return;
+      }
+      var e = peel ? Math.max(0, Math.min(14, lx - nodeX - 2)) : 0;
+      if (e) nodeX = Math.min(nodeX, lx - e);
+      var bp = e ? [[lx, m - e], [lx - e, m], [nodeX, m]] : [[lx, m], [nodeX, m]];
+      branches.push(bp);
+      if (peel) {
+        open[a - 1].push([m - e, lx]); peels.push({ lane: slotLane[a - 1], y: m - e, mark: j }); a--;
+      }
+      if (n >= 3 && j + 1 < marks.length) transition(plan(j + 1)[0], m + 50, marks[j + 1] - 60);
+    });
+    open.forEach(function (pts, k) { if (k < a) pts.push([end, pts[pts.length - 1][1]]); });
+    // loose stubs that end in a dot, scattered between headings: bright ones off the outer line, dim ones from any line, sized to the screen
+    var rnd = function (i) { var q = Math.sin(i * 127.1 + 311.7) * 43758.5453; return q - Math.floor(q); };
+    var cwv = rootEl.clientWidth, limitX = stubEnd + 6;
+    if (link) {
+      var alive2 = [];
+      lanes.forEach(function (_, id) { var x = laneX(id, link.y); if (isFinite(x) && laneX(id, link.y + 50) >= 0 && laneX(id, link.y - 50) >= 0) alive2.push([x, id]); });
+      alive2.sort(function (u, v) { return u[0] - v[0]; });
+      if (alive2.length && alive2[0][0] - link.x >= 12) {
+        var lx2 = alive2[0][0], e2 = Math.min(14, lx2 - link.x - 4);
+        stubs.push({ pts: [[lx2, link.y - e2], [lx2 - e2, link.y], [link.x, link.y]], lane: alive2[0][1], ty: link.y - e2, b: 1, t: 0 });
+      }
+    }
+    for (var g = 0; g < marks.length; g++) {
+      var y0 = g ? marks[g - 1] + 90 : startY + 130, y1 = marks[g] - 90;
+      if (y1 - y0 < 180) continue;
+      var specs = [{ f: .28 + .14 * rnd(g), b: 1 }, { f: .62 + .14 * rnd(g + 9), b: 0 }];
+      if (g % 2) specs.push({ f: .8, b: 1 });
+      specs.forEach(function (sp, si) {
+        var y = y0 + (y1 - y0) * sp.f;
+        if (evY.some(function (ey) { return Math.abs(ey - y) < 70; })) return;
+        var alive = [];
+        lanes.forEach(function (_, id) { var x = laneX(id, y); if (isFinite(x) && laneX(id, y + 40) >= 0 && laneX(id, y - 40) >= 0) alive.push([x, id]); });
+        if (alive.length < 2) return;
+        alive.sort(function (u, v) { return u[0] - v[0]; });
+        var host = sp.b ? alive[0] : alive[Math.floor(rnd(g * 7 + si) * alive.length)];
+        var lx = host[0], lenH = (0.03 + 0.04 * rnd(g * 3 + si + 5)) * cwv, dotX = Math.max(limitX, lx - 12 - lenH);
+        if (lx - dotX < 22) return;
+        var e = rnd(g + si * 13) > .45 ? Math.min(12, (lx - dotX) * .5) : 0;
+        stubs.push({ pts: e ? [[lx, y - e], [lx - e, y], [dotX, y]] : [[lx, y], [dotX, y]], lane: host[1], ty: y - e, b: sp.b, t: 0 });
+      });
+    }
+  }
+  // The hand-off from the hero to the strip, kept minimal: a solder dot on each line, a slim chip the lines run
+  // through, and one test point on a short elbowed trace. It lights up when a hero pulse arrives.
+  function drawSeam(sy, ts) {
+    var sY = startY - sy + 2; if (sY < -90 || sY > SH + 40) return;
+    var n = strands.length, glow = 0;
+    rings.forEach(function (r) { glow = Math.max(glow, 1 - (ts - r.t) / 700); });
+    var edge = glow > 0 ? '#9BE33A' : '#5E8F2E', trace = glow > 0 ? 'rgba(122,185,41,' + (.5 + glow * .4) + ')' : 'rgba(58,82,48,.95)';
+    sctx.lineCap = 'round'; sctx.lineJoin = 'round';
+    strands.forEach(function (x) {
+      sctx.fillStyle = '#15171A'; sctx.strokeStyle = edge; sctx.lineWidth = 1.8;
+      sctx.beginPath(); sctx.arc(x, sY, 3.4, 0, 7); sctx.fill(); sctx.stroke();
+    });
+    if (n < 3) return;
+    var xl = strands[n - 1], xr = strands[0], cy = sY + 30, cx = (xl + xr) / 2, hw = (xr - xl) / 2 + 8;
+    // test point: one trace to the left with a single elbow, ending in a ring
+    var L = Math.max(30, Math.min(80, rootEl.clientWidth * .035)), ex = cx - hw - L, ey = cy + 14;
+    sctx.strokeStyle = trace; sctx.lineWidth = 1.8;
+    sctx.beginPath(); sctx.moveTo(cx - hw, cy); sctx.lineTo(cx - hw - L + 14, cy); sctx.lineTo(ex, ey); sctx.stroke();
+    sctx.fillStyle = '#15171A'; sctx.strokeStyle = edge; sctx.lineWidth = 1.8;
+    sctx.beginPath(); sctx.arc(ex, ey, 6, 0, 7); sctx.fill(); sctx.stroke();
+    sctx.fillStyle = edge; sctx.beginPath(); sctx.arc(ex, ey, 2.2, 0, 7); sctx.fill();
+    // slim chip
+    sctx.fillStyle = '#15171A'; sctx.strokeStyle = edge; sctx.lineWidth = 1.8;
+    sctx.beginPath(); sctx.rect(cx - hw, cy - 6, hw * 2, 12); sctx.fill(); sctx.stroke();
+    sctx.fillStyle = glow > 0 ? 'rgba(210,255,140,' + (.5 + glow * .5) + ')' : 'rgba(94,143,46,.6)';
+    if (glow > 0) { sctx.shadowColor = '#A6E44A'; sctx.shadowBlur = 10 * glow; }
+    sctx.beginPath(); sctx.arc(cx, cy, 2.2, 0, 7); sctx.fill(); sctx.shadowBlur = 0;
+  }
+  function pointOn(pts, f) {
+    var tot = 0, L = [], k;
+    for (k = 1; k < pts.length; k++) { L.push(Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1])); tot += L[k - 1]; }
+    var d = f * tot; k = 0; while (k < L.length - 1 && d > L[k]) { d -= L[k]; k++; }
+    var u = L[k] ? Math.min(1, d / L[k]) : 1;
+    return [pts[k][0] + (pts[k + 1][0] - pts[k][0]) * u, pts[k][1] + (pts[k + 1][1] - pts[k][1]) * u];
+  }
+  function spark(pts, f, sy) {
+    var q = pointOn(pts, f);
+    sctx.fillStyle = '#F2FFD6'; sctx.shadowColor = '#A6E44A'; sctx.shadowBlur = 12;
+    sctx.beginPath(); sctx.arc(q[0], q[1] - sy, 3, 0, 7); sctx.fill(); sctx.shadowBlur = 0;
+  }
+  function segX(seg, y) {
+    for (var i = 1; i < seg.length; i++) {
+      if (y <= seg[i][0]) { var a = seg[i - 1], b = seg[i]; return a[1] + (b[1] - a[1]) * (y - a[0]) / (b[0] - a[0] || 1); }
+    }
+    return seg[seg.length - 1][1];
+  }
+  function laneX(l, y) {
+    var segs = lanes[l];
+    for (var k = 0; k < segs.length; k++) if (y >= segs[k][0][0] && y <= segs[k][segs[k].length - 1][0]) return segX(segs[k], y);
+    return NaN;
+  }
+  function strokeLane(l, sy, ya, yb) {
+    lanes[l].forEach(function (seg) {
+      var lo = Math.max(ya, seg[0][0] - sy), hi = Math.min(yb, seg[seg.length - 1][0] - sy);
+      if (hi <= lo) return;
+      sctx.beginPath(); sctx.moveTo(segX(seg, lo + sy), lo);
+      for (var i = 0; i < seg.length; i++) if (seg[i][0] - sy > lo && seg[i][0] - sy < hi) sctx.lineTo(seg[i][1], seg[i][0] - sy);
+      sctx.lineTo(segX(seg, hi + sy), hi); sctx.stroke();
+    });
+  }
+  // pulses always flow down from the hero: they enter at the top of the strip and never reverse when scrolling up
+  function spawn(anywhere, top) {
     var len = 50 + Math.random() * 70;
-    pulses.push({ y: anywhere ? Math.random() * SH : (dir > 0 ? -len : SH + len), len: len, v: .55 + Math.random() * .9, s: Math.floor(Math.random() * strands.length) });
+    pulses.push({ y: anywhere ? top + Math.random() * Math.max(0, SH - top) : Math.max(top, -len) - Math.random() * 260, len: len, v: .55 + Math.random() * .9, s: Math.floor(Math.random() * strands.length) });
   }
   function frame(ts) {
     var dt = Math.min(64, ts - (last || ts)); last = ts;
@@ -343,67 +513,138 @@
     nextBurst -= dt;
     if (nextBurst < 0) { burst = 1; nextBurst = 2200 + Math.random() * 3800; }
     burst = Math.max(0, burst - dt / 900);
-    var dir = vel < -40 ? -1 : 1;
+    var dir = 1;
     var speed = 70 + Math.min(1400, Math.abs(vel) * .9) + (Math.sin(ts / 2300) * .5 + .5) * 60 + burst * burst * 650;
     var head = SH * .6; // reading position: the current is "charged" up to here
-    sctx.clearRect(-PADL, 0, SW + PADL, SH);
+    sctx.clearRect(-PADL, 0, SW + PADL + PADR, SH);
     var top = Math.max(0, startY - sy); // the current starts where the hero ends
-    sctx.save(); sctx.beginPath(); sctx.rect(-PADL, top, SW + PADL, Math.max(0, SH - top)); sctx.clip();
-    strands.forEach(function (x) {
-      sctx.lineWidth = 2; sctx.lineCap = 'round';
-      sctx.strokeStyle = 'rgba(58,82,48,.95)'; sctx.beginPath(); sctx.moveTo(x, top); sctx.lineTo(x, SH); sctx.stroke();
-      if (head > top) {
-        var g = sctx.createLinearGradient(0, top, 0, head);
-        g.addColorStop(0, 'rgba(122,185,41,.85)'); g.addColorStop(.7, 'rgba(122,185,41,.8)'); g.addColorStop(1, 'rgba(166,228,74,1)');
-        sctx.strokeStyle = g; sctx.beginPath(); sctx.moveTo(x, top); sctx.lineTo(x, head); sctx.stroke();
-      }
+    sctx.save(); sctx.beginPath(); sctx.rect(-PADL, top, SW + PADL + PADR, Math.max(0, SH - top)); sctx.clip();
+    sctx.lineWidth = 2; sctx.lineCap = 'round'; sctx.lineJoin = 'round';
+    // below the hero the lines pick up where the hero's output lines left off: same colour, then they brighten gradually
+    var bg = sctx.createLinearGradient(0, top, 0, top + 90);
+    bg.addColorStop(0, 'rgba(58,82,48,.7)'); bg.addColorStop(1, 'rgba(58,82,48,.95)');
+    stubs.forEach(function (st) {
+      var ys = st.pts[0][1] - sy; if (ys < -40 || ys > SH + 40) return;
+      var on = ys < head, np = st.pts[st.pts.length - 1];
+      sctx.lineCap = 'round'; sctx.lineJoin = 'round';
+      sctx.strokeStyle = st.b ? (on ? '#7AB929' : 'rgba(58,82,48,.95)') : (on ? 'rgba(122,185,41,.5)' : 'rgba(58,82,48,.45)');
+      sctx.lineWidth = st.b ? 2 : 1.5;
+      sctx.beginPath(); st.pts.forEach(function (q, k) { sctx[k ? 'lineTo' : 'moveTo'](q[0], q[1] - sy); }); sctx.stroke();
+      var r = st.b ? 4 : 2.5;
+      sctx.fillStyle = on ? (st.b ? '#A6E44A' : 'rgba(166,228,74,.6)') : (st.b ? '#15171A' : 'rgba(58,82,48,.6)');
+      sctx.strokeStyle = on ? '#D6FF9A' : (st.b ? '#5E8F2E' : 'rgba(58,82,48,.6)'); sctx.lineWidth = st.b ? 2 : 1.2;
+      if (on && st.b) { sctx.shadowColor = '#7AB929'; sctx.shadowBlur = 8; }
+      sctx.beginPath(); sctx.arc(np[0], np[1] - sy, r, 0, 7); sctx.fill(); sctx.stroke(); sctx.shadowBlur = 0;
+      if (st.t) { var tb = (ts - st.t) / 350; if (tb < 1) spark(st.pts, tb, sy); else if (tb < 1.8) {
+        sctx.strokeStyle = 'rgba(166,228,74,' + (1 - (tb - 1) / .8) * .9 + ')'; sctx.lineWidth = 2;
+        sctx.beginPath(); sctx.arc(np[0], np[1] - sy, r + 2 + (tb - 1) * 10, 0, 7); sctx.stroke(); } }
     });
-    // a branch into every section heading
-    var mid = strands[Math.floor(strands.length / 2)];
+    sctx.strokeStyle = bg; sctx.lineWidth = 2.5;
+    lanes.forEach(function (_, l) { strokeLane(l, sy, top, SH); });
+    sctx.lineWidth = 2;
+    if (head > top) {
+      var g = sctx.createLinearGradient(0, top, 0, head), span = Math.max(1, head - top);
+      g.addColorStop(0, 'rgba(122,185,41,0)'); g.addColorStop(Math.min(1, 140 / span), 'rgba(122,185,41,.8)'); g.addColorStop(1, 'rgba(166,228,74,1)');
+      sctx.strokeStyle = g;
+      lanes.forEach(function (_, l) { strokeLane(l, sy, top, head); });
+    }
+    // a branch into every section heading (a tap, or the line that peeled off the bundle)
     marks.forEach(function (m, i) {
-      var y = m - sy; if (y < -30 || y > SH + 30) { lit[i] = y < head; return; }
-      var on = y < head;
+      var y = m - sy; if (y < -90 || y > SH + 30) { lit[i] = y < head; return; }
+      var on = y < head, bp = branches[i];
       if (on && !lit[i]) litAt[i] = ts; lit[i] = on;
-      var x2 = stubEnd, xs0 = strands[0];
-      var col = on ? '#7AB929' : 'rgba(58,82,48,.95)';
-      // a plain branch: one straight line from the strip to a round node at the heading
-      sctx.strokeStyle = col; sctx.lineWidth = 2; sctx.lineCap = 'round';
+      var np = bp[bp.length - 1], x2 = np[0];
+      sctx.strokeStyle = on ? '#7AB929' : 'rgba(58,82,48,.95)'; sctx.lineWidth = 2; sctx.lineCap = 'round'; sctx.lineJoin = 'round';
       if (on) { sctx.shadowColor = 'rgba(122,185,41,.7)'; sctx.shadowBlur = 6; }
-      sctx.beginPath(); sctx.moveTo(xs0, y); sctx.lineTo(x2, y); sctx.stroke(); sctx.shadowBlur = 0;
-      strands.forEach(function (sx) { sctx.fillStyle = on ? '#A6E44A' : '#3A5230'; sctx.beginPath(); sctx.arc(sx, y, 2, 0, 7); sctx.fill(); });
+      var paths = [bp].concat(extras[i] || []);
+      paths.forEach(function (pp) { sctx.beginPath(); pp.forEach(function (q, k) { sctx[k ? 'lineTo' : 'moveTo'](q[0], q[1] - sy); }); sctx.stroke(); });
+      sctx.shadowBlur = 0;
+      lanes.forEach(function (_, l) {
+        var lx = laneX(l, m); if (!isFinite(lx)) return;
+        sctx.fillStyle = on ? '#A6E44A' : '#3A5230'; sctx.beginPath(); sctx.arc(lx, y, 2, 0, 7); sctx.fill();
+      });
+      // a spark runs along the branch into the node the moment it is reached
+      var age = (ts - litAt[i]) / 800, tr = (ts - litAt[i]) / 450;
+      if (on && litAt[i] && tr < 1) paths.forEach(function (pp) { spark(pp, tr, sy); });
+      var bt = burstT[i], tb = bt ? (ts - bt) / 450 : 9;
+      if (tb < 1) paths.forEach(function (pp) { spark(pp, tb, sy); });
       sctx.fillStyle = on ? '#A6E44A' : '#15171A'; sctx.strokeStyle = on ? '#D6FF9A' : '#5E8F2E'; sctx.lineWidth = 2;
       if (on) { sctx.shadowColor = '#7AB929'; sctx.shadowBlur = 10; }
-      sctx.beginPath(); sctx.arc(x2, y, 5, 0, 7); sctx.fill(); sctx.stroke(); sctx.shadowBlur = 0;
-      var age = (ts - litAt[i]) / 800;
+      var fin = !!extras[i], R = fin ? 8 : 5;
+      if (fin) {
+        sctx.save(); sctx.lineWidth = 1.5;
+        [13, 19].forEach(function (rr, q) {
+          var br = on ? .5 + .5 * Math.sin(ts / 420 - q * 1.1) : 0;
+          sctx.strokeStyle = on ? 'rgba(166,228,74,' + (.15 + br * .45) + ')' : 'rgba(94,143,46,.35)';
+          sctx.beginPath(); sctx.arc(x2, y, rr + br * 2, 0, 7); sctx.stroke();
+        });
+        sctx.restore();
+      }
+      sctx.beginPath(); sctx.arc(x2, y, R, 0, 7); sctx.fill(); sctx.stroke(); sctx.shadowBlur = 0;
+      if (tb >= 1 && tb < 1.8) {
+        sctx.strokeStyle = 'rgba(166,228,74,' + (1 - (tb - 1) / .8) * .9 + ')'; sctx.lineWidth = 2;
+        sctx.beginPath(); sctx.arc(x2, y, 7 + (tb - 1) * 22, 0, 7); sctx.stroke();
+      }
       if (on && age < 1 && litAt[i]) {
         sctx.strokeStyle = 'rgba(166,228,74,' + (1 - age) * .9 + ')'; sctx.lineWidth = 2;
         sctx.beginPath(); sctx.arc(x2, y, 7 + age * 14, 0, 7); sctx.stroke();
         sctx.strokeStyle = 'rgba(166,228,74,' + (1 - age) * .5 + ')'; sctx.beginPath(); sctx.arc(x2, y, 7 + age * 22, 0, 7); sctx.stroke();
       }
     });
-    // head spark
-    var hx = strands[0] - 4;
-    var hg = sctx.createRadialGradient(hx, head, 0, hx, head, 16);
-    hg.addColorStop(0, 'rgba(166,228,74,.85)'); hg.addColorStop(1, 'rgba(166,228,74,0)');
-    sctx.fillStyle = hg; sctx.fillRect(0, head - 16, SW, 32);
+    // head spark: a soft glow on the middle line
+    var hx = strands[Math.floor(strands.length / 2)];
+    var hg = sctx.createRadialGradient(hx, head, 0, hx, head, 14);
+    hg.addColorStop(0, 'rgba(166,228,74,.7)'); hg.addColorStop(1, 'rgba(166,228,74,0)');
+    sctx.fillStyle = hg; sctx.fillRect(hx - 14, head - 14, 28, 28);
     // pulses
+    // each time a hero pulse reaches the bottom of its output line, that same pulse carries on down the matching strip line
+    if (!still && lanes.length > 1) lanes.forEach(function (_, l) {
+      if (heroArrive[l] === undefined) return;
+      var cyc = Math.floor((ts - heroArrive[l]) / 4800);
+      if (handed[l] === undefined) handed[l] = cyc;
+      if (cyc > handed[l]) { handed[l] = cyc; pulses.push({ y: top, len: 70, v: 1, s: l, boost: 1 }); rings.push({ l: l, t: ts }); }
+    });
     if (!still) {
-      while (pulses.length < 7) spawn(dir, pulses.length < 4);
+      while (pulses.length < 7) { spawn(!seeded && pulses.length < 4, top); } seeded = true;
+      var forks = [];
       pulses.forEach(function (p) {
-        p.y += dir * speed * p.v * dt / 1000;
-        var x = strands[Math.min(p.s, strands.length - 1)], y0 = p.y - dir * p.len;
-        var fast = Math.min(1, speed * p.v / 900), len2 = p.len * (1 + fast * 1.6);
-        y0 = p.y - dir * len2;
+        var pv = speed * p.v, prev = p.y;
+        if (p.boost) { pv = pv * (1 - p.boost) + 420 * p.boost; p.boost = Math.max(0, p.boost - dt / 900); }
+        p.y += dir * pv * dt / 1000;
+        var lane = p.s, ln = lanes[lane];
+        if (!ln) { p.dead = 1; return; }
+        var fast = Math.min(1, speed * p.v / 900), len2 = p.len * (1 + fast * 1.6), y0 = p.y - dir * len2;
+        var crossed = function (yy) { return prev < yy - sy && p.y >= yy - sy; };
+        splits.forEach(function (sp) { if (sp.parent === lane && !p.nf && crossed(sp.y) && Math.random() < .75) forks.push({ y: sp.y - sy, len: p.len, v: p.v, s: sp.child, nf: 1 }); });
+        peels.forEach(function (pe) { if (pe.lane === lane && crossed(pe.y)) burstT[pe.mark] = ts; });
+        stubs.forEach(function (st) { if (st.b && st.lane === lane && crossed(st.ty)) st.t = ts; });
+        var endY = ln[0][ln[0].length - 1][0] - sy;
+        if (p.y > endY) {
+          var mg = null; merges.forEach(function (m) { if (m.lane === lane) mg = m; });
+          if (mg) { p.s = mg.into; lane = p.s; } else if (y0 > endY) { p.dead = 1; return; }
+        }
         var g = sctx.createLinearGradient(0, p.y, 0, y0);
         g.addColorStop(0, 'rgba(210,255,140,1)'); g.addColorStop(.3, 'rgba(166,228,74,.7)'); g.addColorStop(1, 'rgba(166,228,74,0)');
         sctx.lineCap = 'round'; sctx.shadowColor = '#7AB929'; sctx.shadowBlur = 10 + fast * 10;
         sctx.strokeStyle = g; sctx.lineWidth = 3 + fast * 1.5;
-        sctx.beginPath(); sctx.moveTo(x, p.y); sctx.lineTo(x, y0); sctx.stroke(); sctx.shadowBlur = 0;
-        sctx.fillStyle = '#F2FFD6'; sctx.beginPath(); sctx.arc(x, p.y, 1.8 + fast, 0, 7); sctx.fill();
+        strokeLane(lane, sy, Math.min(p.y, y0), Math.max(p.y, y0)); sctx.shadowBlur = 0;
+        var hx2 = laneX(lane, p.y + sy);
+        if (isFinite(hx2)) { sctx.fillStyle = '#F2FFD6'; sctx.beginPath(); sctx.arc(hx2, p.y, 1.8 + fast, 0, 7); sctx.fill(); }
       });
-      pulses = pulses.filter(function (p) { return dir > 0 ? p.y - p.len * 3 < SH : p.y + p.len * 3 > 0; });
+      pulses = pulses.filter(function (p) { return !p.dead && p.y - p.len * 3 < SH; }).concat(forks);
     }
     sctx.restore();
+    drawSeam(sy, ts);
+    // a shock ring opens on the line where the hero pulse crosses into the strip
+    rings = rings.filter(function (r) { return ts - r.t < 700; });
+    rings.forEach(function (r) {
+      var age = (ts - r.t) / 700, ry = startY - sy + 2, rx = laneX(r.l, startY + 2);
+      if (!isFinite(rx) || ry < -30 || ry > SH + 30) return;
+      sctx.strokeStyle = 'rgba(166,228,74,' + (1 - age) * .9 + ')'; sctx.lineWidth = 2;
+      sctx.beginPath(); sctx.arc(rx, ry, 3 + age * 11, 0, 7); sctx.stroke();
+      sctx.fillStyle = 'rgba(210,255,140,' + (1 - age) + ')'; sctx.shadowColor = '#A6E44A'; sctx.shadowBlur = 10;
+      sctx.beginPath(); sctx.arc(rx, ry, 2.4 * (1 - age) + .6, 0, 7); sctx.fill(); sctx.shadowBlur = 0;
+    });
     requestAnimationFrame(frame);
   }
   measure();
@@ -461,7 +702,7 @@
     var dark = root.getAttribute('data-theme') === 'dark';
     if (tBtn) tBtn.setAttribute('aria-checked', String(dark));
     var cap = document.getElementById('swCap'); if (cap) cap.textContent = dark ? 'הדליקו את האור' : 'כבו את האור';
-    if (meta) meta.setAttribute('content', dark ? '#0E1012' : '#ffffff');
+    if (meta) meta.setAttribute('content', dark ? '#23272C' : '#ffffff');
   }
   paintTheme();
   function themeBurst(dark, src) {
