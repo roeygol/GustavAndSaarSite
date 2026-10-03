@@ -1069,3 +1069,51 @@
   }, { threshold: 0.6 });
   io.observe(el);
 })();
+
+// Nav busbar: a glowing line on the nav's bottom edge follows the hovered link, rests under the current section
+(function () {
+  var nav = document.querySelector('.nav'), menu = document.getElementById('menu');
+  if (!nav || !menu) return;
+  var links = [].slice.call(menu.querySelectorAll('a'));
+  var ind = document.createElement('span');
+  ind.className = 'nav-ind';
+  ind.setAttribute('aria-hidden', 'true');
+  nav.appendChild(ind);
+  var cur = null, hover = null;
+  function place(a) {
+    var r = a.getBoundingClientRect(), n = nav.getBoundingClientRect();
+    ind.style.top = (r.bottom - n.top - 3) + 'px';
+    ind.style.left = (r.left - n.left + 10) + 'px';
+    ind.style.width = (r.width - 20) + 'px';
+  }
+  function update() {
+    if (getComputedStyle(menu).flexDirection === 'column' || !menu.offsetWidth) { ind.className = 'nav-ind'; return; }
+    var t = hover || cur;
+    if (!t) { ind.className = 'nav-ind'; return; }
+    place(t);
+    ind.className = 'nav-ind ' + (hover ? 'live' : 'rest');
+  }
+  links.forEach(function (a) {
+    a.addEventListener('mouseenter', function () { hover = a; update(); });
+    a.addEventListener('focus', function () { hover = a; update(); });
+    a.addEventListener('mouseleave', function () { hover = null; update(); });
+    a.addEventListener('blur', function () { hover = null; update(); });
+  });
+  var map = [];
+  links.forEach(function (a) {
+    var h = a.getAttribute('href') || '', el = h.charAt(0) === '#' && h.length > 1 ? document.querySelector(h) : null;
+    if (el) map.push({ a: a, el: el });
+  });
+  function spy() {
+    var y = window.scrollY + window.innerHeight * 0.35, next = null;
+    map.forEach(function (m) { if (m.el.getBoundingClientRect().top + window.scrollY <= y) next = m.a; });
+    if (next !== cur) {
+      if (cur) cur.classList.remove('cur');
+      cur = next;
+      if (cur) cur.classList.add('cur');
+      update();
+    }
+  }
+  if (map.length) { window.addEventListener('scroll', spy, { passive: true }); spy(); }
+  window.addEventListener('resize', update);
+})();

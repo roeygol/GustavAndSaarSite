@@ -55,13 +55,17 @@ ul,ol{padding:0;list-style:none}
 .brand{display:flex;flex-shrink:0}
 .brand img{display:block;height:52px;width:auto}
 .menu{display:flex;gap:10px;flex-grow:1;justify-content:flex-start;padding-inline-start:clamp(8px,2vw,32px)}
-/* hover: an electric charge runs along the underline  */
-.menu a{position:relative;white-space:nowrap;font-weight:500;font-size:16px;padding:8px 18px;color:var(--fg);transition:color .18s,text-shadow .18s}
-.menu a::after{content:"";position:absolute;inset-inline:18px;bottom:1px;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--g) 30%,var(--g2,#9BE33A) 70%,transparent);box-shadow:0 0 8px var(--g),0 0 14px var(--g);transform:scaleX(0);transform-origin:right;transition:transform .28s ease-out}
-.menu a:hover,.menu a:focus-visible{color:var(--g);text-shadow:0 0 12px color-mix(in srgb,var(--g) 55%,transparent)}
-.menu a:hover::after,.menu a:focus-visible::after{transform:scaleX(1);animation:flick .9s .3s infinite}
-@keyframes flick{0%,100%{opacity:1}45%{opacity:.55}50%{opacity:1}70%{opacity:.75}}
-@media (prefers-reduced-motion:reduce){.menu a::after{transition:none}.menu a:hover::after{animation:none}}
+/* hover: a live "busbar" on the nav's bottom edge glides to the hovered link (js/script.js), with terminal dots at both ends */
+.menu a{position:relative;white-space:nowrap;font-weight:500;font-size:16px;padding:8px 18px;color:var(--fg);transition:color .18s,letter-spacing .25s}
+.menu a:hover,.menu a:focus-visible,.menu a.cur{color:var(--g)}
+.menu a:hover,.menu a:focus-visible{letter-spacing:.03em}
+.nav-ind{position:absolute;top:60px;left:0;width:0;height:2px;background:var(--g2,#9BE33A);opacity:0;pointer-events:none;transition:left .38s cubic-bezier(.3,1.25,.5,1),top .2s,width .55s cubic-bezier(.3,1.25,.5,1),opacity .25s,box-shadow .25s}
+.nav-ind::before,.nav-ind::after{content:"";position:absolute;top:-1px;width:4px;height:4px;box-sizing:border-box;border-radius:50%;background:var(--nav-bg,#fff);border:1px solid var(--g2,#9BE33A)}
+.nav-ind::before{left:-2px}.nav-ind::after{right:-2px}
+.nav-ind.rest{opacity:.5}
+.nav-ind.live{opacity:1;box-shadow:0 0 10px var(--g2,#9BE33A),0 0 18px var(--g)}
+.nav-ind.live::before,.nav-ind.live::after{background:var(--g2,#9BE33A);box-shadow:0 0 5px var(--g2,#9BE33A)}
+@media (prefers-reduced-motion:reduce){.nav-ind{transition:opacity .2s}}
 .phone-link{font-weight:600;font-size:16px;white-space:nowrap;direction:ltr}
 .phone-link svg{display:none}
 .nav-cta{padding:11px 22px;font-size:15px}
@@ -175,8 +179,10 @@ html.a11y-motion .explode .hbar,html.a11y-motion .explode .needle{animation:none
 
 /* ---------- services (rows) ---------- */
 .rows{border-top:1px solid var(--rule)}
-.row{display:grid;grid-template-columns:90px minmax(0,4fr) minmax(0,5fr);gap:32px;align-items:baseline;padding:34px 0;border-bottom:1px solid var(--rule);transition:background .2s,padding .2s}
-.row:hover{background:var(--paper);padding-inline:16px}
+.row{display:grid;grid-template-columns:90px minmax(0,4fr) minmax(0,5fr);gap:32px;align-items:baseline;padding:34px 0;border-bottom:1px solid var(--rule);transition:background .2s,box-shadow .2s}
+.row>*{transition:transform .2s}
+.row:hover{background:var(--paper);box-shadow:-16px 0 0 var(--paper),16px 0 0 var(--paper)}
+.row:hover>*{transform:translateX(-16px)}
 .row .n{font-weight:800;font-size:44px;line-height:1;color:var(--g-dk);letter-spacing:-.02em;font-variant-numeric:tabular-nums;align-self:center}
 .row h3{font-size:28px}
 .row p{font-size:18px;color:var(--bt)}
@@ -393,7 +399,8 @@ html.a11y-motion *{animation:none !important;transition:none !important;scroll-b
   .why-list li{grid-template-columns:52px 1fr}.why-list b{font-size:30px}
   .row p{grid-column:2;font-size:16px}
   .row h3{font-size:22px}
-  .row:hover{padding-inline:0;background:none}
+  .row:hover{background:none;box-shadow:none}
+  .row:hover>*{transform:none}
   .tr{grid-template-columns:minmax(0,1fr);gap:6px;padding:20px 0}
   .tr .uses{grid-column:auto}
   .tr-cta{flex-direction:column;align-items:flex-start}
