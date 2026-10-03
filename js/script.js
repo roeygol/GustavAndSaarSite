@@ -48,9 +48,10 @@
     // small cuboid, back at z=0, front at z=d, with left/right/top walls
     var cube = function (parent, x, y, w, h, d, front, side, top) {
       var c = mk(parent, 'left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + h + 'px', 'part');
-      var f = mk(c, 'inset:0;background:' + front + ';transform:translateZ(' + d + 'px)');
-      mk(c, 'left:' + (w - d) / 2 + 'px;top:0;width:' + d + 'px;height:' + h + 'px;background:' + side + ';transform:translateZ(' + d / 2 + 'px) rotateY(90deg) translateZ(' + w / 2 + 'px)');
-      mk(c, 'left:' + (w - d) / 2 + 'px;top:0;width:' + d + 'px;height:' + h + 'px;background:' + side + ';transform:translateZ(' + d / 2 + 'px) rotateY(-90deg) translateZ(' + w / 2 + 'px)');
+      mk(c, 'left:-1px;top:2px;right:-4px;bottom:-5px;background:rgba(20,22,24,.5);border-radius:3px;filter:blur(3px);transform:translateZ(-5px);pointer-events:none');
+      var f = mk(c, 'inset:0;background:' + front + ';transform:translateZ(' + d + 'px)', 'fx');
+      mk(c, 'left:' + (w - d) / 2 + 'px;top:0;width:' + d + 'px;height:' + h + 'px;background:linear-gradient(90deg,rgba(0,0,0,.25),transparent 60%),' + side + ';transform:translateZ(' + d / 2 + 'px) rotateY(90deg) translateZ(' + w / 2 + 'px)');
+      mk(c, 'left:' + (w - d) / 2 + 'px;top:0;width:' + d + 'px;height:' + h + 'px;background:linear-gradient(-90deg,rgba(0,0,0,.35),transparent 60%),' + side + ';transform:translateZ(' + d / 2 + 'px) rotateY(-90deg) translateZ(' + w / 2 + 'px)');
       mk(c, 'left:0;top:' + (h - d) / 2 + 'px;width:' + w + 'px;height:' + d + 'px;background:' + top + ';transform:translateZ(' + d / 2 + 'px) rotateX(90deg) translateZ(' + h / 2 + 'px)');
       c._f = f;
       return c;
@@ -58,90 +59,334 @@
 
     // enclosure shell (open front): back wall + four walls
     var shell = mk(scene, 'left:0;top:0;width:' + W + 'px;height:' + H + 'px', 'part');
-    mk(shell, 'inset:0;background:#b8bcbd');
-    mk(shell, 'left:' + (-D / 2) + 'px;top:0;width:' + D + 'px;height:' + H + 'px;background:#cfd3d4;transform:translateZ(' + D / 2 + 'px) rotateY(-90deg)');
-    mk(shell, 'left:' + (W - D / 2) + 'px;top:0;width:' + D + 'px;height:' + H + 'px;background:#b3b8b9;transform:translateZ(' + D / 2 + 'px) rotateY(90deg)');
+    mk(shell, 'inset:0;background:radial-gradient(ellipse at 40% 30%,#c6caca,#a9aeb0 80%)');
+    mk(shell, 'left:' + (-D / 2) + 'px;top:0;width:' + D + 'px;height:' + H + 'px;background:linear-gradient(90deg,#d9dddd,#c3c8c9);transform:translateZ(' + D / 2 + 'px) rotateY(-90deg)');
+    mk(shell, 'left:' + (W - D / 2) + 'px;top:0;width:' + D + 'px;height:' + H + 'px;background:linear-gradient(90deg,#b3b8b9,#9ea4a6);transform:translateZ(' + D / 2 + 'px) rotateY(90deg)');
     mk(shell, 'left:0;top:' + (-D / 2) + 'px;width:' + W + 'px;height:' + D + 'px;background:#e9ebeb;transform:translateZ(' + D / 2 + 'px) rotateX(90deg)');
     mk(shell, 'left:0;top:' + (H - D / 2) + 'px;width:' + W + 'px;height:' + D + 'px;background:#9fa4a6;transform:translateZ(' + D / 2 + 'px) rotateX(-90deg)');
+    // front lip of the enclosure and a ventilation slot band on the left wall
+    mk(shell, 'left:-1px;top:-1px;width:' + (W + 2) + 'px;height:' + (H + 2) + 'px;border:7px solid #d4d8d9;box-sizing:border-box;transform:translateZ(' + D + 'px);pointer-events:none');
+    mk(shell, 'left:' + (-D / 2 + 14) + 'px;top:150px;width:' + (D - 28) + 'px;height:110px;background:repeating-linear-gradient(0deg,#5d6366 0 3px,transparent 3px 9px);transform:translateZ(' + D / 2 + 'px) rotateY(-90deg) translateZ(1px)');
     add(shell, 0, [0, 0, 0], [0, 0, -90]);
 
-    // mounting plate
-    var plate = mk(scene, 'left:14px;top:14px;width:' + (W - 28) + 'px;height:' + (H - 28) + 'px;background:#ece8dc;box-shadow:inset 0 0 0 2px rgba(0,0,0,.12);transform:translateZ(8px)', 'part');
+    // mounting plate with corner screws
+    var plate = mk(scene, 'left:14px;top:14px;width:' + (W - 28) + 'px;height:' + (H - 28) + 'px;background:radial-gradient(ellipse at 30% 20%,#f4f1e6,#e3dfd0 70%),#ece8dc;box-shadow:inset 0 0 0 2px rgba(0,0,0,.12),inset 0 0 30px rgba(0,0,0,.12);transform:translateZ(8px)', 'part');
     add(plate, 1, [0, 0, 8], [0, 0, -30]);
+    [[20, 20], [W - 28, 20], [20, H - 28], [W - 28, H - 28]].forEach(function (p) {
+      var s = mk(scene, 'left:' + p[0] + 'px;top:' + p[1] + 'px;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#8d9499 70%);box-shadow:0 1px 2px rgba(0,0,0,.4)', 'part');
+      mk(s, 'left:3px;top:1px;width:2px;height:6px;background:#555b5f');
+      add(s, 1, [0, 0, 10], [rnd(seq) * 30, rnd(seq + 1) * 30, 40], [0, 0, rnd(seq + 2) * 90]);
+      seq += 3;
+    });
 
     // rails and devices (rows from top to bottom)
-    var rail = function (y, st) {
-      var r = mk(scene, 'left:24px;top:' + (y + 62) + 'px;width:' + (W - 48) + 'px;height:10px;background:linear-gradient(#e2e5e6,#8d9499)', 'part');
+    var rail = function (y, st, x0, w) {
+      var r = mk(scene, 'left:' + (x0 || 24) + 'px;top:' + (y + 62) + 'px;width:' + (w || W - 48) + 'px;height:10px;background:linear-gradient(#e2e5e6,#8d9499)', 'part');
+      mk(r, 'left:0;right:0;top:4px;height:2px;background:repeating-linear-gradient(90deg,#4d5357 0 6px,transparent 6px 14px)');
       add(r, st, [0, 0, 14], [0, rnd(y) * 20, -6]);
     };
-    // row 1: white MCBs with black toggles
+    var txt = function (parent, css, str) { return mk(parent, 'font:700 8px/1 Arial,sans-serif;text-align:center;' + css, null).appendChild(document.createTextNode(str)).parentNode; };
+    var led = function (parent, css, color) { return mk(parent, css + ';border-radius:50%;background:' + color + ';color:' + color, 'led'); };
+    var screw = function (parent, css) {
+      var sc = mk(parent, css + ';border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#aeb4b8 55%,#6d7377);box-shadow:0 0 0 1px rgba(0,0,0,.35)');
+      mk(sc, 'left:15%;right:15%;top:44%;height:1.5px;background:#3a3f45;transform:rotate(35deg)');
+      return sc;
+    };
+    var MCB_ON = '21px', MCB_OFF = '30px';
+    var devs = { led: [], tog: [], win: [], ov: [], gauge: [] };
+
+    // row 1: main breaker + white MCBs with black toggles and rating labels
     rail(24, 1);
-    for (var i = 0; i < 12; i++) {
-      var m = cube(scene, 28 + i * 20.5, 24, 19, 64, 28, '#f3f4f4', '#c7cbcc', '#dcdfdf');
-      mk(m._f, 'left:5px;top:10px;width:9px;height:15px;background:#15171A;border-radius:2px');
-      mk(m._f, 'left:3px;bottom:6px;right:3px;height:4px;background:#9aa0a3');
+    var main = cube(scene, 28, 24, 50, 64, 34, '#2a2d31', '#16181b', '#3a3f45');
+    mk(main._f, 'left:5px;top:5px;width:40px;height:10px;background:#f3f4f4');
+    txt(main._f, 'left:5px;top:6px;width:40px;color:#15171A;letter-spacing:1px', 'MAIN');
+    var mhandle = mk(main._f, 'left:9px;top:19px;width:32px;height:30px;background:linear-gradient(90deg,#7d848a,#b9bec0 40%,#7d848a);border-radius:3px;box-shadow:0 2px 3px rgba(0,0,0,.5);transition:top .15s');
+    mk(mhandle, 'left:3px;top:3px;width:26px;height:10px;background:#b5524a;border-radius:2px');
+    main._f.classList.add('play');
+    txt(main._f, 'left:5px;bottom:5px;width:40px;color:#9aa0a3', 'I   O');
+    for (var sx = 0; sx < 3; sx++) { screw(main._f, 'left:' + (7 + sx * 13) + 'px;top:-1px;width:9px;height:9px'); screw(main._f, 'left:' + (7 + sx * 13) + 'px;bottom:-1px;width:9px;height:9px'); }
+    add(main, 2, [0, 0, 14], [-30, -60, 100], [20, -30, -10]);
+    devs.main = main;
+    var rate = ['C10', 'C16', 'C16', 'C20', 'C10', 'C25', 'C16', 'C20', 'C32'];
+    var tag = ['#e4e6e6', '#d3e6b0', '#e4e6e6', '#e4e6e6', '#d3e6b0', '#e4e6e6', '#e4e6e6', '#d3e6b0', '#e4e6e6'];
+    devs.mcb = [];
+    for (var i = 0; i < 9; i++) {
+      var m = cube(scene, 84 + i * 20.9, 24, 19, 64, 28, 'linear-gradient(90deg,#dfe2e2,#fbfbfb 35%,#fbfbfb 65%,#d9dcdc)', '#c7cbcc', '#dcdfdf');
+      screw(m._f, 'left:4px;top:1px;width:11px;height:7px;border-radius:2px');
+      screw(m._f, 'left:4px;bottom:1px;width:11px;height:7px;border-radius:2px');
+      txt(m._f, 'left:1px;top:10px;width:17px;font-size:6px;color:#2a2d31', rate[i]);
+      mk(m._f, 'left:3px;top:18px;width:13px;height:24px;background:linear-gradient(90deg,#1b1e21,#33383d);border-radius:2px;box-shadow:inset 0 0 3px #000');
+      var mtog = mk(m._f, 'left:5px;top:' + MCB_ON + ';width:9px;height:11px;background:linear-gradient(90deg,#4a5157,#15171A 50%,#2a2d31);border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,.6);transition:top .15s');
+      mk(mtog, 'left:1px;top:1px;width:7px;height:1.5px;background:#8d9499');
+      m._f.classList.add('play');
+      devs.tog.push(mtog);
+      mk(m._f, 'left:2px;top:45px;width:15px;height:8px;background:' + tag[i] + ';border:1px solid #b8bcbd');
+      mk(m._f, 'left:5px;top:47px;width:9px;height:1px;background:#6d7377');
+      mk(m._f, 'left:5px;top:50px;width:6px;height:1px;background:#6d7377');
       add(m, 2 + (i % 2), [0, 0, 14], [rnd(seq) * 60, -50 - (i % 4) * 14, 70 + (i % 5) * 18], [rnd(seq + 1) * 40, rnd(seq + 2) * 50, rnd(seq + 3) * 40]);
       seq += 4;
+      devs.mcb.push(m);
     }
-    // row 2: black contactors
+
+    // three phase busbars (brown / black / grey) on insulating supports
+    var bars = ['#6b5a4d', '#2b2e31', '#9ba1a4'];
+    devs.bus = [];
+    bars.forEach(function (c, bi) {
+      var b = cube(scene, 28, 92 + bi * 8, 244, 5, 8, 'linear-gradient(#fff3,#0003),' + c, c, c);
+      add(b, 3, [0, 0, 18], [0, -20 - bi * 14, 80 + bi * 16], [0, 0, (bi - 1) * 4]);
+      devs.bus.push(b);
+    });
+    [58, 148, 240].forEach(function (x, si) {
+      var sp = cube(scene, x, 89, 10, 26, 14, '#2f3438', '#1b1e21', '#454c52');
+      add(sp, 3, [0, 0, 14], [rnd(seq) * 20, 10, 40 + si * 12], [0, 0, 0]);
+      seq += 1;
+    });
+
+    // row 2: black contactors with window, aux block and status LED
     rail(118, 2);
+    devs.con = [];
     for (i = 0; i < 6; i++) {
-      var k = cube(scene, 28 + i * 42, 118, 38, 70, 34, '#26292d', '#16181b', '#3a3f45');
-      mk(k._f, 'left:6px;top:8px;width:26px;height:10px;background:#f3f4f4');
-      for (var j = 0; j < 3; j++) mk(k._f, 'left:' + (8 + j * 9) + 'px;bottom:6px;width:6px;height:6px;border-radius:50%;background:#aeb3b6');
+      var k = cube(scene, 28 + i * 42, 118, 38, 70, 34, 'linear-gradient(90deg,#1b1e21,#2f3438 30%,#2f3438 70%,#1b1e21)', '#16181b', '#3a3f45');
+      for (var j = 0; j < 3; j++) {
+        screw(k._f, 'left:' + (4 + j * 11) + 'px;top:2px;width:9px;height:9px');
+        screw(k._f, 'left:' + (4 + j * 11) + 'px;bottom:2px;width:9px;height:9px');
+        txt(k._f, 'left:' + (3 + j * 11) + 'px;top:12px;width:11px;font-size:4.5px;color:#9aa0a3', 'L' + (j + 1));
+        txt(k._f, 'left:' + (3 + j * 11) + 'px;top:51px;width:11px;font-size:4.5px;color:#9aa0a3', 'T' + (j + 1));
+      }
+      mk(k._f, 'left:5px;top:19px;width:28px;height:10px;background:#eef0f0;border-radius:1px');
+      txt(k._f, 'left:5px;top:21px;width:28px;color:#15171A;font-size:6px', 'K' + (i + 1));
+      devs.win.push(mk(k._f, 'left:6px;top:32px;width:13px;height:8px;background:#6e767d;border:1px solid #0d0f10;border-radius:1px;transition:background .2s'));
+      k._f.classList.add('play');
+      mk(k._f, 'right:5px;top:31px;width:9px;height:19px;background:linear-gradient(90deg,#4f5a63,#6b7782);border-radius:1px');
+      mk(k._f, 'right:7px;top:34px;width:5px;height:1px;background:#cfd3d4');
+      mk(k._f, 'right:7px;top:38px;width:5px;height:1px;background:#cfd3d4');
+      devs.led.push(led(k._f, 'left:10px;top:43px;width:6px;height:6px', '#5be05b'));
       add(k, 3, [0, 0, 14], [rnd(seq) * 70, rnd(seq + 1) * 40, 90 + (i % 3) * 22], [rnd(seq + 2) * 50, rnd(seq + 3) * 60, rnd(seq + 4) * 50]);
       seq += 5;
+      devs.con.push(k);
     }
-    // row 3: dark contactors with red tops
+
+    // row 3: three overload relays (red tops), a PLC and a power supply
     rail(212, 3);
-    for (i = 0; i < 6; i++) {
-      var k2 = cube(scene, 28 + i * 42, 212, 38, 68, 34, '#2b2e32', '#16181b', '#b23a32');
-      mk(k2._f, 'left:6px;top:8px;width:26px;height:10px;background:#e9ebeb');
-      mk(k2._f, 'left:8px;bottom:8px;width:22px;height:8px;background:#b23a32');
+    for (i = 0; i < 3; i++) {
+      var k2 = cube(scene, 28 + i * 42, 212, 38, 68, 34, 'linear-gradient(90deg,#24272b,#3a4046 30%,#3a4046 70%,#24272b)', '#16181b', '#4a5157');
+      for (var j2 = 0; j2 < 3; j2++) {
+        screw(k2._f, 'left:' + (4 + j2 * 11) + 'px;top:2px;width:9px;height:8px');
+        screw(k2._f, 'left:' + (4 + j2 * 11) + 'px;bottom:2px;width:9px;height:8px');
+      }
+      mk(k2._f, 'left:5px;top:13px;width:28px;height:9px;background:#eef0f0;border-radius:1px');
+      txt(k2._f, 'left:5px;top:15px;width:28px;color:#15171A;font-size:6px', 'F' + (i + 1));
+      mk(k2._f, 'left:6px;top:25px;width:20px;height:20px;border-radius:50%;background:repeating-conic-gradient(from -120deg,#e9ebeb 0 1.5deg,#2b2e32 0 9deg);box-shadow:0 0 0 1px #0d0f10');
+      mk(k2._f, 'left:9px;top:28px;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,#4a5157 0 35%,#d8dcdd 37% 60%,#8d9499 62%)');
+      var optr = mk(k2._f, 'left:15px;top:27px;width:2px;height:9px;background:#d33a2c;border-radius:1px;transform-origin:50% 9px;transition:transform .25s');
+      mk(k2._f, 'left:28px;top:26px;width:7px;height:7px;border-radius:50%;background:#8d9499;box-shadow:0 0 0 1px #0d0f10');
+      mk(k2._f, 'left:28px;top:36px;width:7px;height:7px;border-radius:50%;background:#e9ebeb;box-shadow:0 0 0 1px #0d0f10');
+      var obar = mk(k2._f, 'left:7px;top:48px;width:24px;height:6px;background:#a8453d;border-radius:1px;transition:background .2s,box-shadow .2s');
+      k2._f.classList.add('play');
+      devs.ov.push({ f: k2._f, ptr: optr, bar: obar });
       add(k2, 4, [0, 0, 14], [rnd(seq) * 70, rnd(seq + 1) * 40, 80 + (i % 3) * 24], [rnd(seq + 2) * 50, rnd(seq + 3) * 60, rnd(seq + 4) * 50]);
       seq += 5;
     }
-    // terminal strip
-    var term = cube(scene, 28, 318, 244, 30, 24, '#c9b98e', '#8a7d58', '#e0d3a8');
-    for (i = 0; i < 16; i++) mk(term._f, 'left:' + (6 + i * 15) + 'px;top:6px;width:10px;height:18px;background:#9a8a5e;border-radius:2px');
-    add(term, 4, [0, 0, 14], [0, 60, 60], [-20, 0, 0]);
-    // wire duct
-    var duct = cube(scene, 28, 292, 244, 18, 20, '#f2f3f3', '#c9cdce', '#fff');
-    mk(duct._f, 'inset:5px 4px;background:repeating-linear-gradient(90deg,#b7bcbe 0 10px,transparent 10px 14px)');
-    add(duct, 5, [0, 0, 14], [0, -40, 110], [0, 0, 8]);
-    // wires
-    [[46, '#d8433a'], [110, '#d8433a'], [176, '#e9ecec'], [240, '#d8433a']].forEach(function (w, wi) {
-      var wr = mk(scene, 'left:' + w[0] + 'px;top:90px;width:3px;height:230px;background:' + w[1] + ';border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.3)', 'part');
-      add(wr, 5, [0, 0, 44], [(wi - 1.5) * 50, 10, 70 + wi * 14], [0, 0, (wi - 1.5) * 10]);
-    });
+    var plc = cube(scene, 158, 212, 80, 68, 30, '#3a4046', '#16181b', '#4c545b');
+    var lcdbox = mk(plc._f, 'left:6px;top:6px;width:68px;height:22px;background:#0c2210;border:2px solid #1b1e21;box-shadow:inset 0 0 6px #000;transition:background .2s');
+    plc._f.classList.add('play');
+    for (j = 0; j < 4; j++) mk(plc._f, 'left:' + (11 + j * 15) + 'px;top:' + (11 + (j % 2) * 7) + 'px;width:' + (10 + (j % 3) * 4) + 'px;height:2px;background:#7fe05a;opacity:.85', 'lcd');
+    txt(plc._f, 'left:6px;top:32px;width:30px;color:#cfd3d4;text-align:left;font-size:7px', 'PLC');
+    for (j = 0; j < 8; j++) led(plc._f, 'left:' + (8 + j * 8.5) + 'px;top:44px;width:5px;height:5px', j % 4 === 3 ? '#d8c76a' : '#5be05b');
+    for (j = 0; j < 8; j++) mk(plc._f, 'left:' + (7 + j * 8.5) + 'px;bottom:5px;width:7px;height:7px;background:radial-gradient(circle at 35% 35%,#fff,#8d9499);border-radius:1px');
+    add(plc, 4, [0, 0, 14], [30, 30, 110], [-20, 25, 15]);
+    devs.plc = plc;
+    var psu = cube(scene, 242, 212, 30, 68, 30, '#d9dcdd', '#9da3a6', '#eceeee');
+    mk(psu._f, 'left:3px;top:6px;width:24px;height:10px;background:#8ABD36');
+    var psuKnob = mk(psu._f, 'left:7px;top:24px;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle,#777 0 30%,#2b2e32 32%)', 'play');
+    var psuPtr = mk(psuKnob, 'left:7px;top:1px;width:2px;height:7px;background:#f3f4f4;transform-origin:50% 7px;transition:transform .2s');
+    led(psu._f, 'left:12px;top:46px;width:6px;height:6px', '#5be05b');
+    add(psu, 4, [0, 0, 14], [40, -10, 70], [10, 40, 0]);
 
-    // door: hinged on the right edge, standing open; its inner face carries the pilot lamps
+    // wire duct, terminal strip, PE bar and data plate
+    var duct = cube(scene, 28, 292, 244, 18, 20, '#f2f3f3', '#c9cdce', '#fff');
+    mk(duct._f, 'inset:5px 4px;background:repeating-linear-gradient(90deg,#9ea4a7 0 10px,#3a3f43 10px 14px);box-shadow:inset 0 2px 3px rgba(0,0,0,.4)');
+    for (i = 0; i < 6; i++) mk(duct._f, 'left:' + (14 + i * 40) + 'px;top:' + (i % 2 ? 11 : 3) + 'px;width:3px;height:6px;background:' + ['#8f4a43', '#2b2e31', '#9ba1a4', '#8f4a43', '#c9cdce', '#2b2e31'][i] + ';border-radius:1px');
+    devs.duct = duct;
+    duct._f.classList.add('play');
+    add(duct, 5, [0, 0, 14], [0, -40, 110], [0, 0, 8]);
+    var term = cube(scene, 28, 318, 244, 30, 24, '#c9b98e', '#8a7d58', '#e0d3a8');
+    var tc = ['#9a8a5e', '#9a8a5e', '#9a8a5e', '#7a8288', '#9a8a5e', '#9a8a5e'];
+    for (i = 0; i < 16; i++) {
+      var tt = mk(term._f, 'left:' + (6 + i * 15) + 'px;top:6px;width:10px;height:18px;background:' + tc[i % 6] + ';border-radius:2px');
+      screw(tt, 'left:2px;top:2px;width:6px;height:6px');
+      mk(tt, 'left:2px;top:9px;width:6px;height:3px;background:#2b2e31;border-radius:1px');
+      txt(tt, 'left:0;bottom:1px;width:10px;font-size:5px;color:#fff', String(i + 1));
+    }
+    add(term, 4, [0, 0, 14], [0, 60, 60], [-20, 0, 0]);
+    devs.term = term;
+    var pe = cube(scene, 28, 354, 244, 10, 12, 'repeating-linear-gradient(90deg,#5b8f55 0 9px,#d6c85a 9px 18px)', '#5b8f55', '#d6c85a');
+    for (i = 0; i < 8; i++) mk(pe._f, 'left:' + (14 + i * 30) + 'px;top:2px;width:6px;height:6px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#6d7377)');
+    add(pe, 5, [0, 0, 14], [0, 80, 40], [10, 0, 0]);
+    var np = mk(scene, 'left:28px;top:372px;width:244px;height:28px;background:linear-gradient(#e2e5e6,#b9bec0);border:1px solid #8d9499;border-radius:2px', 'part');
+    mk(np, 'right:6px;top:6px;width:108px;height:14px;color:#2a2d31;font:700 8px/14px Arial,sans-serif;direction:rtl;text-align:right').appendChild(document.createTextNode('גוסטב את סער'));
+    mk(np, 'right:6px;top:15px;width:140px;height:10px;color:#4d5357;font:6px/10px Arial,sans-serif;direction:rtl;text-align:right').appendChild(document.createTextNode('לוח חשמל · תכנון, ייצור, בדיקה'));
+    mk(np, 'left:6px;top:4px;width:20px;height:20px;background:conic-gradient(#222 25%,#fff 0 50%,#222 0 75%,#fff 0) 0 0/6px 6px');
+    add(np, 5, [0, 0, 12], [0, 100, 30], [0, 0, -4]);
+    // loose looms behind the devices (so they only peek out between them)
+    [[46, '#8f4a43'], [78, '#6d7377'], [110, '#8f4a43'], [143, '#2b2e31'], [176, '#c9cdce'], [208, '#6d7377'], [240, '#8f4a43']].forEach(function (w, wi) {
+      var wr = mk(scene, 'left:' + w[0] + 'px;top:90px;width:2px;height:230px;background:' + w[1] + ';border-radius:2px;box-shadow:0 0 0 .5px rgba(0,0,0,.35)', 'part');
+      add(wr, 5, [0, 0, 10], [(wi - 3) * 34, 10, 60 + (wi % 4) * 14], [0, 0, (wi - 3) * 8]);
+    });
+    // neat jumpers: contactor -> overload relay -> terminal strip, in phase colours
+    var phase = ['#6b5a4d', '#2b2e31', '#9ba1a4'];
+    [0, 1, 2].forEach(function (ci) {
+      [0, 1, 2].forEach(function (pj) {
+        var jx = 28 + ci * 42 + 8.5 + pj * 11;
+        [[183, 218], [270, 326]].forEach(function (seg) {
+          var jw = mk(scene, 'left:' + jx + 'px;top:' + seg[0] + 'px;width:2.5px;height:' + (seg[1] - seg[0]) + 'px;background:linear-gradient(90deg,' + phase[pj] + ',#ffffff55 50%,' + phase[pj] + ');border-radius:1px;box-shadow:0 0 0 .5px rgba(0,0,0,.45)', 'part');
+          add(jw, 5, [0, 0, 47], [rnd(seq) * 30, 24, 60 + pj * 10], [0, 0, rnd(seq + 1) * 12]);
+          seq += 2;
+        });
+      });
+    });
+    // door: hinged on the right edge, standing open; its inner face carries the controls
     var door = mk(scene, 'left:0;top:0;width:' + W + 'px;height:' + H + 'px', 'part');
-    mk(door, 'inset:0;background:linear-gradient(90deg,#e6e8e8,#cfd3d4);border:1px solid #a9aeb0;backface-visibility:hidden');
+    var outer = mk(door, 'inset:0;background:linear-gradient(90deg,#e6e8e8,#cfd3d4);border:1px solid #a9aeb0;backface-visibility:hidden');
+    mk(outer, 'left:30px;bottom:30px;width:240px;height:44px;background:repeating-linear-gradient(0deg,#8d9499 0 3px,#dfe2e3 3px 9px)');
+    mk(outer, 'left:112px;top:40px;width:76px;height:66px;background:#cfc25a;clip-path:polygon(50% 0,100% 100%,0 100%)');
+    txt(outer, 'left:112px;top:70px;width:76px;font-size:30px;color:#15171A', '⚡');
     var inner = mk(door, 'inset:0;background:#dcdfdf;border:1px solid #a9aeb0;box-shadow:inset 0 0 0 6px #eceeee;transform:rotateY(180deg);backface-visibility:hidden');
-    var lamp = function (x, y, sz, ring) {
-      var l = mk(inner, 'left:' + x + 'px;top:' + y + 'px;width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;background:radial-gradient(circle,#fff 0 40%,' + ring + ' 42%);box-shadow:0 2px 3px rgba(0,0,0,.35)');
-      pop(l, 3, 50, 0.6);
+    inner.classList.add('door-in');
+    outer.classList.add('door-out');
+    var dpart = function (el, st, z) { pop(el, st, z || 50, 0.6); return el; };
+    // nameplate
+    var head = mk(inner, 'left:20px;top:22px;width:260px;height:26px;background:#1b1e21;border-radius:3px;box-shadow:0 2px 3px rgba(0,0,0,.35)');
+    mk(head, 'inset:0;color:#A6E44A;font:700 14px/26px Arial,sans-serif;direction:rtl;text-align:center;letter-spacing:.5px').appendChild(document.createTextNode('גוסטב את סער'));
+    dpart(head, 2);
+    // HMI screen with live bars
+    var hmi = mk(inner, 'left:22px;top:72px;width:256px;height:78px;background:#0a180d;border:5px solid #2b2f33;border-radius:5px;box-shadow:inset 0 0 12px #000,0 2px 4px rgba(0,0,0,.4);overflow:hidden', 'play');
+    for (i = 0; i < 16; i++) {
+      var hb = mk(hmi, 'left:' + (10 + i * 14.5) + 'px;bottom:6px;width:9px;height:' + (20 + Math.abs(rnd(i + 40)) * 80) + 'px;max-height:50px;background:linear-gradient(#b8ff7a,#3d8f1e);transform-origin:50% 100%;animation-delay:' + (-i * 0.23).toFixed(2) + 's', 'hbar');
+    }
+    mk(hmi, 'left:8px;top:6px;width:90px;height:3px;background:#7fe05a;opacity:.7');
+    mk(hmi, 'left:8px;top:13px;width:56px;height:3px;background:#7fe05a;opacity:.45');
+    mk(hmi, 'inset:0;background:linear-gradient(115deg,rgba(255,255,255,.2) 0,rgba(255,255,255,0) 38%);pointer-events:none');
+    dpart(hmi, 3, 70);
+    // two analogue meters
+    var gauge = function (x, y, label, phase) {
+      var g = mk(inner, 'left:' + x + 'px;top:' + y + 'px;width:78px;height:78px;border-radius:50%;background:radial-gradient(circle,#fff 0 60%,#e6e8e8);border:5px solid #25282b;box-shadow:0 3px 5px rgba(0,0,0,.4),inset 0 0 6px rgba(0,0,0,.25);box-sizing:border-box');
+      mk(g, 'inset:4px;border-radius:50%;background:conic-gradient(from -115deg,#6fae45 0 105deg,#cfc26a 0 150deg,#c4584e 0 230deg,transparent 0);-webkit-mask:radial-gradient(circle,transparent 0 62%,#000 64%);mask:radial-gradient(circle,transparent 0 62%,#000 64%)');
+      mk(g, 'inset:9px;border-radius:50%;background:repeating-conic-gradient(from -115deg,#15171A 0 1.2deg,transparent 0 11.5deg);-webkit-mask:radial-gradient(circle,transparent 0 78%,#000 80%);mask:radial-gradient(circle,transparent 0 78%,#000 80%);clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%)');
+      var nd = mk(g, 'left:32px;top:8px;width:2px;height:27px;background:#d33a2c;transform-origin:50% 100%;border-radius:1px;animation-delay:' + phase + 's', 'needle');
+      g.classList.add('play');
+      devs.gauge.push({ g: g, n: nd });
+      mk(g, 'left:29px;top:32px;width:8px;height:8px;border-radius:50%;background:#25282b');
+      txt(g, 'left:0;bottom:7px;width:68px;font-size:10px;color:#15171A', label);
+      mk(g, 'inset:0;border-radius:50%;background:radial-gradient(ellipse at 30% 22%,rgba(255,255,255,.55),rgba(255,255,255,0) 45%);pointer-events:none');
+      return dpart(g, 3, 60);
     };
-    for (var r = 0; r < 3; r++) for (var c = 0; c < 6; c++) lamp(34 + c * 38, 40 + r * 34, 24, '#15171A');
-    for (r = 0; r < 4; r++) for (c = 0; c < 6; c++) lamp(32 + c * 38, 168 + r * 44, 30, '#5a1c1c');
-    var dd = mk(inner, 'left:20px;top:140px;width:250px;height:22px;background:#f4f5f5;border-radius:11px;transform:rotate(-4deg);box-shadow:0 2px 4px rgba(0,0,0,.3)');
-    pop(dd, 2, 70, 0.5);
-    var latch = mk(inner, 'left:6px;top:200px;width:10px;height:26px;background:#9da3a6;border-radius:3px');
-    pop(latch, 2, 60, 0.5);
+    gauge(30, 190, 'A', 0);
+    gauge(122, 190, 'V', -1.3);
+    // emergency stop
+    var es = mk(inner, 'left:214px;top:193px;width:72px;height:72px;border-radius:50%;background:radial-gradient(circle,#cfc25a 0 60%,#a99f3e);box-shadow:0 3px 5px rgba(0,0,0,.45)');
+    var mush = mk(es, 'left:10px;top:8px;width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#ff9b8f,#e0291c 45%,#8f130a);box-shadow:0 5px 5px rgba(0,0,0,.5);transition:transform .15s,box-shadow .15s', 'play');
+    dpart(es, 4, 95);
+    // selector switches and push buttons
+    var knob = function (x, y) {
+      var kn = mk(inner, 'left:' + x + 'px;top:' + y + 'px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#4a5157,#15171A);box-shadow:0 3px 4px rgba(0,0,0,.5),0 0 0 4px #b9bec0', 'play');
+      var ptr = mk(kn, 'left:17px;top:3px;width:4px;height:16px;background:#f3f4f4;border-radius:2px;transform-origin:50% 16px;transition:transform .2s');
+      dpart(kn, 3, 75);
+      return ptr;
+    };
+    var knobA = knob(34, 308), knobB = knob(88, 308);
+    // three pilot lamps
+    var lamps = [];
+    ['#8ee05a', '#d9625a', '#d8c76a'].forEach(function (c, li) {
+      var lp = mk(inner, 'left:' + (160 + li * 42) + 'px;top:313px;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#fff 0,' + c + ' 45%,#222 130%);color:' + c + ';box-shadow:0 0 0 4px #2b2f33,0 3px 5px rgba(0,0,0,.45);animation-delay:' + (-li * .7) + 's', 'led lamp');
+      dpart(lp, 2, 70);
+      lamps.push(lp);
+    });
+    var dd = mk(inner, 'left:6px;top:190px;width:16px;height:46px;background:#9da3a6;border-radius:4px', 'play');
+    mk(outer, 'left:14px;top:190px;width:12px;height:40px;background:linear-gradient(90deg,#6d7377,#c4c9cb,#6d7377);border-radius:4px;box-shadow:0 2px 3px rgba(0,0,0,.4)');
+    outer.classList.add('play');
+    pop(dd, 2, 60, 0.5);
+    mk(door, 'left:-3px;top:0;width:6px;height:' + H + 'px;background:linear-gradient(90deg,#8d9499,#d4d8d9);transform:translateZ(-3px) rotateY(90deg)');
+    [40, 190, 340].forEach(function (hy) {
+      var hg = mk(scene, 'left:' + (W - 2) + 'px;top:' + hy + 'px;width:9px;height:30px;border-radius:3px;background:linear-gradient(90deg,#6d7377,#e2e5e6 45%,#6d7377);box-shadow:0 1px 2px rgba(0,0,0,.5)', 'part');
+      add(hg, 0, [0, 0, D - 2], [30, 0, 60], [0, 0, 0]);
+    });
     add(door, 0, [0, 0, D], [20, 0, 60], [0, 18, 0], '100% 50%');
     door.dataset.open = '1';
 
+    // play: breakers, main switch, emergency stop and selector knobs actually do something
+    var ps = { main: true, stop: false, mcb: devs.tog.map(function () { return true; }), ka: 2, kb: 2, con: devs.win.map(function () { return true; }), trip: [false, false, false], plc: 0, psu: 0, view: 0, duct: false };
+    var KPOS = [-40, 0, 40];
+    var sync = function () {
+      var dead = ps.stop || !ps.main;
+      ex.classList.toggle('dead', dead);
+      ex.classList.toggle('fast', ps.kb === 0);
+      mhandle.style.top = ps.main ? '19px' : '29px';
+      devs.tog.forEach(function (t, i) { t.style.top = ps.mcb[i] ? MCB_ON : MCB_OFF; });
+      devs.led.forEach(function (l, i) { l.classList.toggle('off', dead || !ps.mcb[i]); });
+      mush.style.transform = ps.stop ? 'translateY(4px) scale(.93)' : '';
+      mush.style.boxShadow = ps.stop ? '0 1px 2px rgba(0,0,0,.5)' : '';
+      knobA.style.transform = 'rotate(' + KPOS[ps.ka] + 'deg)';
+      knobB.style.transform = 'rotate(' + KPOS[ps.kb] + 'deg)';
+      lamps[0].classList.toggle('off', dead);
+      lamps[1].classList.toggle('off', !ps.stop);
+      lamps[2].classList.toggle('off', ps.ka !== 2 || dead);
+      devs.led.forEach(function (l, i) { l.classList.toggle('off', dead || !ps.mcb[i] || !ps.con[i] || !!ps.trip[i]); });
+      devs.win.forEach(function (w, i) { w.style.background = (!dead && ps.mcb[i] && ps.con[i] && !ps.trip[i]) ? '#6e767d' : '#2b2e32'; });
+      devs.ov.forEach(function (o, i) {
+        o.ptr.style.transform = ps.trip[i] ? 'rotate(70deg)' : '';
+        o.bar.style.background = ps.trip[i] ? '#ff5a4a' : '#a8453d';
+        o.bar.style.boxShadow = ps.trip[i] ? '0 0 8px 2px rgba(255,90,74,.7)' : '';
+      });
+      var lc = [['#0c2210', '#7fe05a'], ['#0c2210', '#cfd3d4'], ['#a9c98a', '#14301a']][ps.plc];
+      lcdbox.style.background = lc[0];
+      lcdbox.querySelectorAll('.lcd').forEach(function (l, i) {
+        l.style.background = lc[1];
+        l.style.width = (ps.plc === 1 ? 52 - i * 9 : 10 + (i % 3) * 4) + 'px';
+      });
+      psuPtr.style.transform = 'rotate(' + ps.psu * 60 + 'deg)';
+      ex.classList.toggle('mono', ps.view === 1);
+      ex.classList.toggle('line', ps.view === 2);
+      devs.duct._f.style.background = ps.duct ? '#3a3f45' : '#f2f3f3';
+      devs.duct._f.firstElementChild.style.opacity = ps.duct ? 0 : 1;
+    };
+    var press = function (el, fn) {
+      el.addEventListener('click', function () { fn(); sync(); });
+    };
+    press(main._f, function () { ps.main = !ps.main; });
+    devs.mcb.forEach(function (m, i) { press(m._f, function () { ps.mcb[i] = !ps.mcb[i]; }); });
+    press(mush, function () { ps.stop = !ps.stop; });
+    press(knobA.parentNode, function () { ps.ka = (ps.ka + 1) % 3; });
+    press(knobB.parentNode, function () { ps.kb = (ps.kb + 1) % 3; });
+    devs.con.forEach(function (k, i) { press(k._f, function () { ps.con[i] = !ps.con[i]; }); });
+    devs.ov.forEach(function (o, i) { press(o.f, function () { ps.trip[i] = !ps.trip[i]; }); });
+    press(plc._f, function () { ps.plc = (ps.plc + 1) % 3; });
+    press(psuKnob, function () { ps.psu = (ps.psu + 1) % 6; });
+    press(hmi, function () { ps.view = (ps.view + 1) % 3; });
+    press(devs.duct._f, function () { ps.duct = !ps.duct; });
+    devs.gauge.forEach(function (o) {
+      press(o.g, function () {
+        o.n.style.animation = 'needleKick .9s ease-out';
+        setTimeout(function () { o.n.style.animation = ''; }, 900);
+      });
+    });
+    press(dd, function () { dt = 0; kick(); });
+    inner.classList.add('play-bg');
+    inner.addEventListener('click', function (e) { if (e.target === inner) { dt = 0; kick(); } });
+    press(outer, function () { dt = dt ? 0 : 105; kick(); });
+    sync();
+
     var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var cur = still ? 0 : 1, raf = 0;
+    var cur = still ? 0 : 1, raf = 0, tiltX = 0, tiltY = 0, tiltTX = 0, tiltTY = 0, held = false;
     var smooth = function (t) { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
-    var OPEN = 105;
+    var da = 105, dt = 105;
     var paint = function (p) {
-      scene.style.transform = 'rotateX(-5deg) rotateY(' + (20 - smooth(p) * 14) + 'deg)';
+      scene.style.transform = 'rotateX(' + (-5 + tiltY * 2) + 'deg) rotateY(' + (20 - smooth(p) * 14 + tiltX * 6) + 'deg)';
+      ex.classList.toggle('on', p < 0.08);
       parts.forEach(function (o) {
         var q = smooth(p * 1.6 - o.st * 0.09);
         o.el.style.transformOrigin = o.o;
-        var ry = o.r[1] * q + (o.el === door ? OPEN : 0);
+        var ry = o.r[1] * q + (o.el === door ? da : 0);
         o.el.style.transform = 'translate3d(' + (o.b[0] + o.e[0] * q) + 'px,' + (o.b[1] + o.e[1] * q) + 'px,' + (o.b[2] + o.e[2] * q) + 'px) rotateX(' + o.r[0] * q + 'deg) rotateY(' + ry + 'deg) rotateZ(' + o.r[2] * q + 'deg)';
       });
     };
@@ -151,15 +396,30 @@
       var d = Math.abs(rect.top + rect.height / 2 - vh / 2) / vh;
       var target = smooth((d - 0.06) / 0.4);
       cur += (target - cur) * 0.12;
-      if (calm()) { cur = 0; paint(0); raf = 0; return; }
+      da += (dt - da) * 0.14;
+      tiltX += (tiltTX - tiltX) * 0.1;
+      tiltY += (tiltTY - tiltY) * 0.1;
+      if (calm()) { cur = 0; tiltX = tiltY = 0; da = dt; paint(0); raf = 0; return; }
       paint(cur);
-      raf = Math.abs(target - cur) > 0.002 ? requestAnimationFrame(tick) : 0;
+      raf = Math.abs(target - cur) > 0.002 || Math.abs(dt - da) > 0.2 || Math.abs(tiltTX - tiltX) > 0.002 || Math.abs(tiltTY - tiltY) > 0.002 ? requestAnimationFrame(tick) : 0;
     };
     var calm = function () { return still || document.documentElement.classList.contains('a11y-motion'); };
     var kick = function () { if (!raf && !calm()) raf = requestAnimationFrame(tick); };
     paint(cur);
     window.addEventListener('scroll', kick, { passive: true });
     window.addEventListener('resize', kick);
+    // gentle parallax: the panel turns towards the pointer
+    // hold the tilt while the pointer rests on a part, so a click lands where it was aimed
+    ex.addEventListener('pointerdown', function () { tiltTX = tiltX; tiltTY = tiltY; held = true; });
+    ex.addEventListener('pointerup', function () { setTimeout(function () { held = false; }, 250); });
+    ex.addEventListener('pointermove', function (e) {
+      if (held) return;
+      var r = ex.getBoundingClientRect();
+      tiltTX = Math.max(-1, Math.min(1, (e.clientX - r.left) / r.width * 2 - 1));
+      tiltTY = Math.max(-1, Math.min(1, (e.clientY - r.top) / r.height * 2 - 1));
+      kick();
+    });
+    ex.addEventListener('pointerleave', function () { tiltTX = tiltTY = 0; kick(); });
     kick();
     document.addEventListener('a11y-motion', function () { if (calm()) { cur = 0; paint(0); } else kick(); });
   }
