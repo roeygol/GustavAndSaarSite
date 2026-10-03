@@ -4,6 +4,7 @@
 import { buildVisitEmail, sendViaResend } from "../_lib/email.js";
 
 const VISIT_WINDOW_SECONDS = 60;
+const KNOWN_PAGES = new Set(["index", "privacy", "accessibility", "404", "services-design", "services-manufacturing", "services-testing", "services-installation-maintenance", "panels-industrial", "panels-control", "panels-hvac", "panels-smoke-extraction", "panels-pumps"]);
 const TRANSPARENT_GIF = Uint8Array.from(
   atob("R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="),
   (c) => c.charCodeAt(0)
@@ -50,7 +51,9 @@ function gifResponse(extraHeaders) {
 export async function onRequestGet(context) {
   const request = context.request;
   const url = new URL(request.url);
-  const page = url.searchParams.get("page") ? cleanHeaderValue(url.searchParams.get("page"), 100) : "unknown";
+  // Only known page names reach the email; arbitrary ?page= values are attacker-controlled text.
+  const rawPage = url.searchParams.get("page") || "";
+  const page = KNOWN_PAGES.has(rawPage) ? rawPage : "unknown";
   const referrer = request.headers.get("referer") ? cleanHeaderValue(request.headers.get("referer"), 300) : "-";
   const userAgent = request.headers.get("user-agent") ? cleanHeaderValue(request.headers.get("user-agent"), 300) : "-";
   const ip = request.headers.get("CF-Connecting-IP") || "-";
